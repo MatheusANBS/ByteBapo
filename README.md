@@ -59,12 +59,6 @@ Rode no dispositivo conectado:
 flutter run -d <device-id>
 ```
 
-Exemplo:
-
-```powershell
-flutter run -d RQCW303BPHF
-```
-
 ## Configuração do Ollama
 
 O servidor Ollama precisa estar acessível pelo Android. Se o Ollama estiver rodando no computador e o app no celular, use o IP local da máquina, não `localhost`.
