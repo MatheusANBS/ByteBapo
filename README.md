@@ -176,4 +176,4 @@ Não exponha uma instância Ollama diretamente na internet sem uma camada de pro
 
 ## Licença
 
-Licença ainda não definida neste repositório.
+Este projeto está licenciado sob a licença MIT. Consulte o arquivo [LICENSE](./LICENSE) para mais detalhes.
