@@ -1,5 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/conversation.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/features/chat/domain/entities/conversation.dart';
 
 void main() {
   test('Conversation persists character id and keeps old json compatible', () {

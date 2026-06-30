@@ -96,6 +96,13 @@ Fluxo básico no app:
 | `flutter build apk --debug` | Gera APK debug |
 | `flutter build apk --release` | Gera APK release |
 
+## Documentação
+
+- [Documentação técnica](./docs/TECHNICAL.md): arquitetura, fluxos internos, integração com Ollama, persistência local e decisões técnicas.
+- [Política de segurança](./SECURITY.md): recomendações para uso em rede local e reporte de vulnerabilidades.
+- [Privacidade](./PRIVACY.md): dados armazenados localmente e dados enviados ao servidor Ollama configurado.
+- [Guia de contribuição](./CONTRIBUTING.md): fluxo de issues, pull requests e comandos de verificação.
+
 ## Builds Android
 
 APK debug:

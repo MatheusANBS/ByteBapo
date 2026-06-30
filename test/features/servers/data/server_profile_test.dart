@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/core/errors/app_exception.dart';
-import 'package:ollama_mobile_client/features/servers/domain/entities/server_profile.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/core/errors/app_exception.dart';
+import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 
 void main() {
   group('ServerProfile', () {

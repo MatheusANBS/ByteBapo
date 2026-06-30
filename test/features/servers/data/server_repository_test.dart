@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/features/servers/data/repositories/server_repository_impl.dart';
-import 'package:ollama_mobile_client/features/servers/domain/entities/server_profile.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/features/servers/data/repositories/server_repository_impl.dart';
+import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

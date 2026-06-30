@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/features/chat/data/repositories/character_repository_impl.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/chat_character.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/features/chat/data/repositories/character_repository_impl.dart';
+import 'package:byte_papo/features/chat/domain/entities/chat_character.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

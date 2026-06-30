@@ -1,12 +1,12 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:ollama_mobile_client/core/network/ollama_api_client.dart';
-import 'package:ollama_mobile_client/features/chat/data/repositories/conversation_repository_impl.dart';
-import 'package:ollama_mobile_client/features/chat/presentation/chat_controller.dart';
-import 'package:ollama_mobile_client/features/servers/domain/entities/server_profile.dart';
+import 'package:byte_papo/core/network/ollama_api_client.dart';
+import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
+import 'package:byte_papo/features/chat/presentation/chat_controller.dart';
+import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {

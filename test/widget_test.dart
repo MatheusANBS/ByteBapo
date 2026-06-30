@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/app/app.dart';
-import 'package:ollama_mobile_client/features/chat/data/repositories/conversation_repository_impl.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/chat_message.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/conversation.dart';
-import 'package:ollama_mobile_client/features/chat/presentation/chat_screen.dart';
-import 'package:ollama_mobile_client/features/models/data/repositories/model_selection_repository_impl.dart';
-import 'package:ollama_mobile_client/features/servers/data/repositories/server_repository_impl.dart';
-import 'package:ollama_mobile_client/features/servers/domain/entities/server_profile.dart';
-import 'package:ollama_mobile_client/shared/providers.dart';
+import 'package:byte_papo/app/app.dart';
+import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
+import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
+import 'package:byte_papo/features/chat/domain/entities/conversation.dart';
+import 'package:byte_papo/features/chat/presentation/chat_screen.dart';
+import 'package:byte_papo/features/models/data/repositories/model_selection_repository_impl.dart';
+import 'package:byte_papo/features/servers/data/repositories/server_repository_impl.dart';
+import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
+import 'package:byte_papo/shared/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -1,4 +1,4 @@
-package com.example.ollama_mobile_client
+package com.matheusanbs.bytepapo
 
 import android.app.Activity
 import android.content.Intent
@@ -17,7 +17,7 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
-            "ollama_mobile_client/avatar_picker"
+            "byte_papo/avatar_picker"
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "pickAvatar" -> pickAvatar(result)

@@ -1,8 +1,8 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/core/errors/app_exception.dart';
-import 'package:ollama_mobile_client/core/network/ollama_stream_parser.dart';
+import 'package:byte_papo/core/errors/app_exception.dart';
+import 'package:byte_papo/core/network/ollama_stream_parser.dart';
 
 void main() {
   group('OllamaStreamParser', () {

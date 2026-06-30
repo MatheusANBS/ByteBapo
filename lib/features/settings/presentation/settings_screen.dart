@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -315,7 +315,7 @@ class _CharacterDialog extends StatefulWidget {
 
 class _CharacterDialogState extends State<_CharacterDialog> {
   static const _avatarPickerChannel = MethodChannel(
-    'ollama_mobile_client/avatar_picker',
+    'byte_papo/avatar_picker',
   );
 
   final _nameController = TextEditingController();

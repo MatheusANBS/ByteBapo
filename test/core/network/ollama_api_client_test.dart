@@ -1,13 +1,13 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:ollama_mobile_client/core/network/ollama_api_client.dart';
-import 'package:ollama_mobile_client/core/network/ollama_stream_parser.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/chat_message.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/generation_options.dart';
-import 'package:ollama_mobile_client/features/servers/domain/entities/server_profile.dart';
+import 'package:byte_papo/core/network/ollama_api_client.dart';
+import 'package:byte_papo/core/network/ollama_stream_parser.dart';
+import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
+import 'package:byte_papo/features/chat/domain/entities/generation_options.dart';
+import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 
 void main() {
   test('streamChat sends think and streams thinking before content', () async {

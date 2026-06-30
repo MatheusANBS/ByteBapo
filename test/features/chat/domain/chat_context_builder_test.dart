@@ -1,6 +1,6 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:ollama_mobile_client/features/chat/domain/chat_context_builder.dart';
-import 'package:ollama_mobile_client/features/chat/domain/entities/chat_message.dart';
+﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/features/chat/domain/chat_context_builder.dart';
+import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 
 void main() {
   test('buildChatContext prepends system prompt as system message', () {
