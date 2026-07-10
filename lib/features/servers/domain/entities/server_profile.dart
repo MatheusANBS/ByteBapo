@@ -60,6 +60,18 @@ class ServerProfile {
 
   factory ServerProfile.fromJson(Map<String, dynamic> json) {
     final providerStr = json['provider'] as String? ?? 'ollama';
+    final apiKey = json['apiKey'] as String?;
+    final provider = providerStr == 'nvidia' ? ApiProvider.nvidia : ApiProvider.ollama;
+    
+    final defaultHeaders = (json['headers'] as Map<String, dynamic>? ?? {}).map(
+      (key, value) => MapEntry(key, value.toString()),
+    ) as Map<String, String>;
+    
+    // Recria o header Authorization se for NVIDIA com API key
+    if (provider == ApiProvider.nvidia && apiKey != null && apiKey.isNotEmpty) {
+      defaultHeaders['Authorization'] = 'Bearer $apiKey';
+    }
+    
     return ServerProfile(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -67,16 +79,14 @@ class ServerProfile {
       host: json['host'] as String,
       port: json['port'] as int,
       basePath: json['basePath'] as String?,
-      headers: (json['headers'] as Map<String, dynamic>? ?? {}).map(
-        (key, value) => MapEntry(key, value.toString()),
-      ),
+      headers: defaultHeaders,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
       lastConnectedAt: json['lastConnectedAt'] == null
           ? null
           : DateTime.parse(json['lastConnectedAt'] as String),
-      provider: providerStr == 'nvidia' ? ApiProvider.nvidia : ApiProvider.ollama,
-      apiKey: json['apiKey'] as String?,
+      provider: provider,
+      apiKey: apiKey,
       defaultModel: json['defaultModel'] as String?,
     );
   }
@@ -125,6 +135,15 @@ class ServerProfile {
     String? apiKey,
     String? defaultModel,
   }) {
+    final newProvider = provider ?? this.provider;
+    final newApiKey = apiKey ?? this.apiKey;
+    final newHeaders = {...?headers ?? this.headers};
+    
+    // Recria o header Authorization se for NVIDIA com API key
+    if (newProvider == ApiProvider.nvidia && newApiKey != null && newApiKey.isNotEmpty) {
+      newHeaders['Authorization'] = 'Bearer $newApiKey';
+    }
+    
     return ServerProfile(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -132,12 +151,12 @@ class ServerProfile {
       host: host ?? this.host,
       port: port ?? this.port,
       basePath: basePath ?? this.basePath,
-      headers: headers ?? this.headers,
+      headers: newHeaders,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
-      provider: provider ?? this.provider,
-      apiKey: apiKey ?? this.apiKey,
+      provider: newProvider,
+      apiKey: newApiKey,
       defaultModel: defaultModel ?? this.defaultModel,
     );
   }
