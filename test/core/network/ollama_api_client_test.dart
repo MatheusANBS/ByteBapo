@@ -3,7 +3,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:byte_papo/core/network/ollama_api_client.dart';
+import 'package:byte_papo/core/network/api_client.dart';
 import 'package:byte_papo/core/network/ollama_stream_parser.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/generation_options.dart';
@@ -12,7 +12,7 @@ import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 void main() {
   test('streamChat sends think and streams thinking before content', () async {
     late Map<String, dynamic> requestBody;
-    final client = OllamaApiClient(
+    final client = ApiClient(
       httpClient: MockClient.streaming((request, bodyStream) async {
         requestBody =
             jsonDecode((request as http.Request).body) as Map<String, dynamic>;
@@ -40,16 +40,16 @@ void main() {
         .toList();
 
     expect(requestBody['think'], 'high');
-    expect(chunks[0].kind, OllamaChatChunkKind.thinking);
+    expect(chunks[0].kind, ChatChunkKind.thinking);
     expect(chunks[0].text, 'Pensando');
-    expect(chunks[1].kind, OllamaChatChunkKind.content);
+    expect(chunks[1].kind, ChatChunkKind.content);
     expect(chunks[1].text, 'Resposta');
   });
 
   test(
     'streamChat does not time out while waiting for cold model start',
     () async {
-      final client = OllamaApiClient(
+      final client = ApiClient(
         timeout: const Duration(milliseconds: 1),
         httpClient: MockClient.streaming((request, bodyStream) async {
           await Future<void>.delayed(const Duration(milliseconds: 30));

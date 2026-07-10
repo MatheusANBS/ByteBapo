@@ -37,11 +37,20 @@ class OllamaApiFailure extends AppFailure {
   ]);
 }
 
+class NvidiaApiFailure extends AppFailure {
+  const NvidiaApiFailure([super.message = 'A API NVIDIA retornou um erro.']);
+}
+
 class StreamParseFailure extends AppFailure {
   const StreamParseFailure([
     super.message =
         'Nao consegui interpretar a resposta em streaming do Ollama.',
   ]);
+}
+
+class StreamParseException extends AppException {
+  const StreamParseException([Object? cause])
+    : super(const StreamParseFailure(), cause);
 }
 
 abstract class AppException implements Exception {
@@ -68,4 +77,8 @@ class OllamaStreamParseException extends AppException {
 
 class OllamaApiException extends AppException {
   const OllamaApiException(super.failure, [super.cause]);
+}
+
+class NvidiaApiException extends AppException {
+  const NvidiaApiException(super.failure, [super.cause]);
 }

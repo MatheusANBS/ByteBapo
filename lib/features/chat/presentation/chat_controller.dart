@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/network/api_client.dart';
-import '../../../../core/network/stream_parser.dart';
+import '../../../../core/network/ollama_stream_parser.dart';
 import '../domain/chat_context_builder.dart';
 import '../domain/entities/chat_character.dart';
 import '../domain/entities/chat_message.dart';

@@ -3,7 +3,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:byte_papo/core/network/ollama_api_client.dart';
+import 'package:byte_papo/core/network/api_client.dart';
 import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
 import 'package:byte_papo/features/chat/presentation/chat_controller.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
@@ -15,7 +15,7 @@ void main() {
     final preferences = await SharedPreferences.getInstance();
     var historyChangedCount = 0;
     final controller = ChatController(
-      apiClient: OllamaApiClient(
+      apiClient: ApiClient(
         httpClient: MockClient.streaming((request, bodyStream) async {
           return http.StreamedResponse(
             Stream.fromIterable([

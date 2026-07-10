@@ -5,14 +5,14 @@ import 'package:byte_papo/core/errors/app_exception.dart';
 import 'package:byte_papo/core/network/ollama_stream_parser.dart';
 
 void main() {
-  group('OllamaStreamParser', () {
+  group('StreamParser', () {
     test('emits a token from one NDJSON line', () async {
       final stream = _byteStream([
         '{"message":{"role":"assistant","content":"Ola"},"done":false}\n',
       ]);
 
       await expectLater(
-        OllamaStreamParser.parseChatTokens(stream),
+        StreamParser.parseTokens(stream),
         emitsInOrder(['Ola', emitsDone]),
       );
     });
@@ -26,7 +26,7 @@ void main() {
         '{"done":true}\n',
       ]);
 
-      final tokens = await OllamaStreamParser.parseChatTokens(stream).toList();
+      final tokens = await StreamParser.parseTokens(stream).toList();
 
       expect(tokens.join(), 'Ola mundo');
     });
@@ -38,7 +38,7 @@ void main() {
       ]);
 
       await expectLater(
-        OllamaStreamParser.parseChatTokens(stream),
+        StreamParser.parseTokens(stream),
         emitsInOrder(['Ola', emitsDone]),
       );
     });
@@ -49,7 +49,7 @@ void main() {
         '{"message":{"role":"assistant","content":"ignorado"},"done":false}\n',
       ]);
 
-      final tokens = await OllamaStreamParser.parseChatTokens(stream).toList();
+      final tokens = await StreamParser.parseTokens(stream).toList();
 
       expect(tokens, ['Fim']);
     });
@@ -60,7 +60,7 @@ void main() {
         '{"done":true}\n',
       ]);
 
-      final tokens = await OllamaStreamParser.parseChatTokens(stream).toList();
+      final tokens = await StreamParser.parseTokens(stream).toList();
 
       expect(tokens, isEmpty);
     });
@@ -69,8 +69,8 @@ void main() {
       final stream = _byteStream(['{"message":\n']);
 
       expect(
-        () => OllamaStreamParser.parseChatTokens(stream).drain<void>(),
-        throwsA(isA<OllamaStreamParseException>()),
+        () => StreamParser.parseTokens(stream).drain<void>(),
+        throwsA(isA<StreamParseException>()),
       );
     });
 
@@ -79,7 +79,7 @@ void main() {
         '{"message":{"role":"assistant","content":"Olá mundo"},"done":false}\n',
       ]);
 
-      final tokens = await OllamaStreamParser.parseChatTokens(stream).toList();
+      final tokens = await StreamParser.parseTokens(stream).toList();
 
       expect(tokens.single, 'Olá mundo');
     });
@@ -91,14 +91,14 @@ void main() {
         '{"done":true}\n',
       ]);
 
-      final chunks = await OllamaStreamParser.parseChatChunks(stream).toList();
+      final chunks = await StreamParser.parseChunks(stream).toList();
 
       expect(chunks, hasLength(3));
-      expect(chunks[0].kind, OllamaChatChunkKind.thinking);
+      expect(chunks[0].kind, ChatChunkKind.thinking);
       expect(chunks[0].text, 'Vou calcular');
-      expect(chunks[1].kind, OllamaChatChunkKind.thinking);
+      expect(chunks[1].kind, ChatChunkKind.thinking);
       expect(chunks[1].text, ' passo a passo.');
-      expect(chunks[2].kind, OllamaChatChunkKind.content);
+      expect(chunks[2].kind, ChatChunkKind.content);
       expect(chunks[2].text, 'A resposta e 42.');
     });
 
@@ -109,9 +109,35 @@ void main() {
         '{"done":true}\n',
       ]);
 
-      final tokens = await OllamaStreamParser.parseChatTokens(stream).toList();
+      final tokens = await StreamParser.parseTokens(stream).toList();
 
       expect(tokens, ['Final']);
+    });
+
+    test('parses SSE format with choices', () async {
+      final stream = _byteStream([
+        'data: {"choices":[{"delta":{"content":"Olá"}}]}\n\n',
+        'data: {"choices":[{"delta":{"content":" mundo"}}]}\n\n',
+        'data: [DONE]\n\n',
+      ]);
+
+      final tokens = await StreamParser.parseTokens(stream).toList();
+
+      expect(tokens.join(), 'Olá mundo');
+    });
+
+    test('parses SSE format with tool calls', () async {
+      final stream = _byteStream([
+        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"sum","arguments":"{\"a\":1,\"b\":2}"}}]}}]}\n\n',
+        'data: [DONE]\n\n',
+      ]);
+
+      final chunks = await StreamParser.parseChunks(stream).toList();
+
+      expect(chunks, hasLength(1));
+      expect(chunks[0].kind, ChatChunkKind.toolCall);
+      expect(chunks[0].toolCall!.name, 'sum');
+      expect(chunks[0].toolCall!.arguments, '{"a":1,"b":2}');
     });
   });
 }

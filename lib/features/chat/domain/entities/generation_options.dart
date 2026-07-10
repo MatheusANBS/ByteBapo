@@ -24,6 +24,8 @@ class GenerationOptions {
   const GenerationOptions({
     this.temperature,
     this.topP,
+    this.maxTokens,
+    this.stopSequences,
     this.numCtx,
     this.seed,
     this.thinking = ThinkingMode.modelDefault,
@@ -34,6 +36,8 @@ class GenerationOptions {
     return GenerationOptions(
       temperature: (json['temperature'] as num?)?.toDouble(),
       topP: (json['topP'] as num?)?.toDouble(),
+      maxTokens: json['maxTokens'] as int?,
+      stopSequences: (json['stopSequences'] as List?)?.cast<String>(),
       numCtx: json['numCtx'] as int?,
       seed: json['seed'] as int?,
       thinking: ThinkingMode.fromName(json['thinking'] as String?),
@@ -43,6 +47,8 @@ class GenerationOptions {
 
   final double? temperature;
   final double? topP;
+  final int? maxTokens;
+  final List<String>? stopSequences;
   final int? numCtx;
   final int? seed;
   final ThinkingMode thinking;
@@ -52,6 +58,8 @@ class GenerationOptions {
     return {
       'temperature': temperature,
       'topP': topP,
+      'maxTokens': maxTokens,
+      'stopSequences': stopSequences,
       'numCtx': numCtx,
       'seed': seed,
       'thinking': thinking.name,

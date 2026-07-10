@@ -11,8 +11,6 @@ import '../features/chat/domain/repositories/character_repository.dart';
 import '../features/chat/domain/repositories/conversation_repository.dart';
 import '../features/chat/domain/repositories/instructions_repository.dart';
 import '../features/models/data/repositories/model_selection_repository_impl.dart';
-import '../features/models/domain/entities/nvidia_model.dart';
-import '../features/models/domain/entities/ollama_model.dart';
 import '../features/models/domain/repositories/model_selection_repository.dart';
 import '../features/servers/data/repositories/server_repository_impl.dart';
 import '../features/servers/domain/entities/server_profile.dart';

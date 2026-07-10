@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/app_exception.dart';
-import '../../../../core/network/api_client.dart';
 import '../../../../shared/providers.dart';
 import '../domain/entities/server_profile.dart';
 

@@ -12,7 +12,7 @@ import '../../features/servers/domain/entities/server_profile.dart';
 import '../errors/app_exception.dart';
 import 'nvidia_endpoints.dart';
 import 'ollama_endpoints.dart';
-import 'stream_parser.dart';
+import 'ollama_stream_parser.dart';
 
 class ApiClient {
   ApiClient({http.Client? httpClient, Duration? timeout})

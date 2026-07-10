@@ -22,7 +22,7 @@ final chatControllerProvider = Provider.autoDispose
         return null;
       }
       final controller = ChatController(
-        apiClient: ref.watch(ollamaApiClientProvider),
+        apiClient: ref.watch(apiClientProvider),
         conversationRepository: ref.watch(conversationRepositoryProvider),
         server: server,
         model: model,
