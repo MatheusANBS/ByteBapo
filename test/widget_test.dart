@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-testWidgets('renders server setup screen', (tester) async {
+  testWidgets('renders server setup screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
 
@@ -34,21 +34,23 @@ testWidgets('renders server setup screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
     final repository = ServerRepositoryImpl(preferences: preferences);
-    await repository.save(
-      ServerProfile.create(
-        id: 'server-1',
-        name: 'Notebook',
-        input: 'http://192.168.0.10:11434',
-      ),
+    final server = ServerProfile.create(
+      id: 'server-1',
+      name: 'Notebook',
+      input: 'http://192.168.0.10:11434',
     );
+    await repository.save(server);
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          serverProfilesProvider.overrideWithValue(AsyncValue.data([server])),
+        ],
         child: const MaterialApp(home: ServerScreen()),
       ),
     );
-    await tester.pumpAndSettle(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
 
     expect(find.text('Notebook'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -104,7 +106,18 @@ testWidgets('renders server setup screen', (tester) async {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          activeServerProvider.overrideWithValue(
+            AsyncValue.data(
+              ServerProfile.create(
+                id: 'server-1',
+                name: 'Notebook',
+                input: 'http://192.168.0.10:11434',
+              ),
+            ),
+          ),
+        ],
         child: const MaterialApp(
           home: ChatScreen(conversationId: 'conversation-1'),
         ),
@@ -170,7 +183,18 @@ testWidgets('renders server setup screen', (tester) async {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          activeServerProvider.overrideWithValue(
+            AsyncValue.data(
+              ServerProfile.create(
+                id: 'server-1',
+                name: 'Notebook',
+                input: 'http://192.168.0.10:11434',
+              ),
+            ),
+          ),
+        ],
         child: const MaterialApp(
           home: ChatScreen(conversationId: 'conversation-2'),
         ),
@@ -244,7 +268,18 @@ testWidgets('renders server setup screen', (tester) async {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          activeServerProvider.overrideWithValue(
+            AsyncValue.data(
+              ServerProfile.create(
+                id: 'server-1',
+                name: 'Notebook',
+                input: 'http://192.168.0.10:11434',
+              ),
+            ),
+          ),
+        ],
         child: const MaterialApp(
           home: ChatScreen(conversationId: 'conversation-3'),
         ),
