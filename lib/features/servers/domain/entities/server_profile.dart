@@ -65,7 +65,7 @@ class ServerProfile {
     
     final defaultHeaders = (json['headers'] as Map<String, dynamic>? ?? {}).map(
       (key, value) => MapEntry(key, value.toString()),
-    ) as Map<String, String>;
+    );
     
     // Recria o header Authorization se for NVIDIA com API key
     if (provider == ApiProvider.nvidia && apiKey != null && apiKey.isNotEmpty) {
@@ -137,7 +137,7 @@ class ServerProfile {
   }) {
     final newProvider = provider ?? this.provider;
     final newApiKey = apiKey ?? this.apiKey;
-    final newHeaders = {...?headers ?? this.headers};
+    final newHeaders = {...(headers ?? this.headers)};
     
     // Recria o header Authorization se for NVIDIA com API key
     if (newProvider == ApiProvider.nvidia && newApiKey != null && newApiKey.isNotEmpty) {
@@ -155,7 +155,7 @@ class ServerProfile {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
-      provider: provider != null ? provider : this.provider,
+      provider: provider ?? this.provider,
       apiKey: apiKey ?? this.apiKey,
       defaultModel: defaultModel ?? this.defaultModel,
     );
