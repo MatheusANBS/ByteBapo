@@ -4,7 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../shared/providers.dart';
+import '../domain/entities/nvidia_model.dart';
 import '../domain/entities/ollama_model.dart';
+import '../../servers/domain/entities/server_profile.dart';
 
 class ModelsScreen extends ConsumerWidget {
   const ModelsScreen({super.key});
@@ -42,7 +44,9 @@ class ModelsScreen extends ConsumerWidget {
         data: (activeServer) {
           if (activeServer == null) {
             return _EmptyModels(
-              message: 'Cadastre um servidor Ollama antes de listar modelos.',
+              message: activeServer?.provider == ApiProvider.nvidia
+                  ? 'Configure a API NVIDIA antes de listar modelos.'
+                  : 'Cadastre um servidor Ollama antes de listar modelos.',
               actionLabel: 'Configurar servidor',
               onAction: () => context.go('/servers'),
             );
@@ -50,16 +54,18 @@ class ModelsScreen extends ConsumerWidget {
           return models.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => _EmptyModels(
-              message:
-                  'Nao consegui listar modelos.\nConfirme se o Ollama esta aberto e acessivel.',
+              message: activeServer.provider == ApiProvider.nvidia
+                  ? 'Nao consegui listar modelos NVIDIA.\nVerifique a API Key e a URL base.'
+                  : 'Nao consegui listar modelos.\nConfirme se o Ollama esta aberto e acessivel.',
               actionLabel: 'Tentar novamente',
               onAction: () => ref.invalidate(modelsProvider),
             ),
             data: (items) {
               if (items.isEmpty) {
                 return _EmptyModels(
-                  message:
-                      'Nenhum modelo instalado nesse servidor.\nInstale no PC com: ollama pull llama3.2',
+                  message: activeServer.provider == ApiProvider.nvidia
+                      ? 'Nenhum modelo disponível na API NVIDIA.\nVerifique sua conta e permissões.'
+                      : 'Nenhum modelo instalado nesse servidor.\nInstale no PC com: ollama pull llama3.2',
                   actionLabel: 'Atualizar',
                   onAction: () => ref.invalidate(modelsProvider),
                 );
@@ -68,7 +74,8 @@ class ModelsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
                 itemBuilder: (context, index) {
                   final model = items[index];
-                  final isSelected = selected == model.model;
+                  final modelId = _getModelId(model);
+                  final isSelected = selected == modelId;
                   return Material(
                     color: isSelected
                         ? Theme.of(context)
@@ -90,25 +97,25 @@ class ModelsScreen extends ConsumerWidget {
                         isSelected ? Icons.check_circle : Icons.memory_outlined,
                         size: 22,
                       ),
-                      title: Text(model.model),
-                      subtitle: Text(_subtitle(model)),
+                      title: Text(modelId),
+                      subtitle: Text(_subtitle(model, activeServer.provider)),
                       trailing: isSelected
                           ? const Icon(Icons.arrow_forward_ios, size: 16)
                           : FilledButton(
-                        onPressed: () async {
-                          await ref
-                              .read(modelSelectionRepositoryProvider)
-                              .setSelectedModel(
-                                model.model,
-                                serverProfileId: activeServer.id,
-                              );
-                          ref.invalidate(selectedModelProvider);
-                          if (context.mounted) {
-                            context.go('/chat');
-                          }
-                        },
-                        child: const Text('Usar'),
-                      ),
+                              onPressed: () async {
+                                await ref
+                                    .read(modelSelectionRepositoryProvider)
+                                    .setSelectedModel(
+                                      modelId,
+                                      serverProfileId: activeServer.id,
+                                    );
+                                ref.invalidate(selectedModelProvider);
+                                if (context.mounted) {
+                                  context.go('/chat');
+                                }
+                              },
+                              child: const Text('Usar'),
+                            ),
                     ),
                   );
                 },
@@ -122,15 +129,40 @@ class ModelsScreen extends ConsumerWidget {
     );
   }
 
-  String _subtitle(OllamaModel model) {
-    final parts = <String>[];
-    if (model.size != null) {
-      parts.add(_formatBytes(model.size!));
+  String _getModelId(dynamic model) {
+    if (model is OllamaModel) {
+      return model.model;
     }
-    if (model.modifiedAt != null) {
-      parts.add('atualizado em ${DateFormat.yMd('pt_BR').format(model.modifiedAt!.toLocal())}');
+    if (model is NvidiaModel) {
+      return model.id;
     }
-    return parts.isEmpty ? 'Sem detalhes adicionais' : parts.join(' · ');
+    return model.toString();
+  }
+
+  String _subtitle(dynamic model, ApiProvider provider) {
+    if (model is OllamaModel) {
+      final parts = <String>[];
+      if (model.size != null) {
+        parts.add(_formatBytes(model.size!));
+      }
+      if (model.modifiedAt != null) {
+        parts.add(
+            'atualizado em ${DateFormat.yMd('pt_BR').format(model.modifiedAt!.toLocal())}');
+      }
+      return parts.isEmpty ? 'Sem detalhes adicionais' : parts.join(' · ');
+    }
+    if (model is NvidiaModel) {
+      final parts = <String>[];
+      if (model.created != 0) {
+        final date = DateTime.fromMillisecondsSinceEpoch(model.created * 1000, isUtc: true);
+        parts.add('criado em ${DateFormat.yMd('pt_BR').format(date.toLocal())}');
+      }
+      if (model.ownedBy.isNotEmpty) {
+        parts.add('por ${model.ownedBy}');
+      }
+      return parts.isEmpty ? 'Modelo NVIDIA' : parts.join(' · ');
+    }
+    return '';
   }
 
   String _formatBytes(int bytes) {

@@ -5,14 +5,14 @@
 <h1 align="center">BytePapo</h1>
 
 <p align="center">
-  Cliente Android em Flutter para conversar com um servidor Ollama na rede local.
+  Cliente Android em Flutter para conversar com servidores Ollama na rede local ou usar a API NVIDIA (build.nvidia.com).
 </p>
 
 ---
 
 ## Visão Geral
 
-BytePapo é um cliente mobile para uso local/LAN com servidores [Ollama](https://ollama.com/). O app permite cadastrar um servidor, selecionar um modelo, enviar mensagens via `/api/chat`, acompanhar respostas em streaming e manter um histórico local básico.
+BytePapo é um cliente mobile para uso local/LAN com servidores [Ollama](https://ollama.com/) e também suporta a [API NVIDIA](https://build.nvidia.com/) (build.nvidia.com). O app permite cadastrar um servidor Ollama, configurar a API NVIDIA com sua API Key, selecionar um modelo, enviar mensagens via streaming e manter um histórico local básico.
 
 O projeto é voltado para Android e desenvolvimento local. Ele não inclui servidor próprio, autenticação, sincronização em nuvem ou distribuição publicada.
 
@@ -21,8 +21,9 @@ O projeto é voltado para Android e desenvolvimento local. Ele não inclui servi
 | Área | Disponível |
 | --- | --- |
 | Servidor | Cadastro de servidor Ollama, normalização de host/porta e teste de conexão |
-| Modelos | Listagem via `/api/tags` e seleção do modelo ativo |
-| Chat | Envio via `/api/chat`, streaming em tempo real e cancelamento |
+| API NVIDIA | Configuração de API Key, base URL e modelo padrão |
+| Modelos | Listagem via `/api/tags` (Ollama) ou `/v1/models` (NVIDIA) e seleção do modelo ativo |
+| Chat | Envio via `/api/chat` (Ollama) ou `/v1/chat/completions` (NVIDIA), streaming em tempo real e cancelamento |
 | Thinking | Suporte ao campo `thinking` quando retornado pelo modelo |
 | Personagens | Nome, foto e instructions por personagem |
 | Instructions | Políticas globais combinadas com instructions do personagem |
@@ -59,7 +60,9 @@ Rode no dispositivo conectado:
 flutter run -d <device-id>
 ```
 
-## Configuração do Ollama
+## Configuração
+
+### Servidor Ollama
 
 O servidor Ollama precisa estar acessível pelo Android. Se o Ollama estiver rodando no computador e o app no celular, use o IP local da máquina, não `localhost`.
 
@@ -70,14 +73,29 @@ http://192.168.0.10:11434
 192.168.0.10
 ```
 
+### API NVIDIA
+
+Para usar a API NVIDIA:
+
+1. Acesse [build.nvidia.com](https://build.nvidia.com/)
+2. Faça login com sua conta NVIDIA
+3. Obtenha sua API Key na página do modelo desejado
+4. No app, selecione "NVIDIA API" como provedor
+5. Configure:
+   - **Base URL**: `https://integrate.api.nvidia.com/v1` (ou conforme o modelo)
+   - **API Key**: sua chave `nvapi-...`
+   - **Modelo padrão** (opcional): ex: `meta/llama-3.1-70b-instruct`
+
 Fluxo básico no app:
 
 1. Abra a tela de servidor.
-2. Cadastre o host/IP do Ollama.
-3. Teste a conexão.
-4. Liste os modelos.
-5. Selecione um modelo.
-6. Abra o chat.
+2. Selecione o provedor (Ollama ou NVIDIA API).
+3. Para Ollama: cadastre o host/IP do Ollama.
+4. Para NVIDIA: insira a Base URL, API Key e modelo padrão.
+5. Teste a conexão.
+6. Liste os modelos.
+7. Selecione um modelo.
+8. Abra o chat.
 
 ## Comandos de Desenvolvimento
 
@@ -131,11 +149,11 @@ lib/
   app/                  Configuração do app, tema e rotas
   core/
     errors/             Exceções e mensagens amigáveis
-    network/            Cliente Ollama e parser de streaming
+    network/            Cliente unificado (Ollama + NVIDIA) e parser de streaming
   features/
     chat/               Chat, histórico, personagens e contexto
-    models/             Listagem e seleção de modelos
-    servers/            Cadastro e teste de servidores
+    models/             Listagem e seleção de modelos (Ollama + NVIDIA)
+    servers/            Cadastro e teste de servidores (Ollama + NVIDIA API)
     settings/           Configurações globais e personagens
   shared/               Providers e widgets compartilhados
 test/                   Testes unitários e de widget

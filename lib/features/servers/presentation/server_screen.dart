@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/app_exception.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../shared/providers.dart';
 import '../domain/entities/server_profile.dart';
 
@@ -22,6 +23,8 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
   final _basePathController = TextEditingController();
   final _headerNameController = TextEditingController();
   final _headerValueController = TextEditingController();
+  final _apiKeyController = TextEditingController();
+  ApiProvider _provider = ApiProvider.ollama;
   String _protocol = 'http';
   bool _isTesting = false;
   String? _feedback;
@@ -34,6 +37,7 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     _basePathController.dispose();
     _headerNameController.dispose();
     _headerValueController.dispose();
+    _apiKeyController.dispose();
     super.dispose();
   }
 
@@ -42,7 +46,7 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     final profiles = ref.watch(serverProfilesProvider);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Servidor Ollama'),
+        title: const Text('Servidor'),
         actions: [
           IconButton(
             tooltip: 'Modelos',
@@ -66,9 +70,14 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
         children: [
           _InfoStrip(
             icon: Icons.lan_outlined,
-            title: 'Servidor LAN',
+            title: 'Servidor',
             message:
-                'Informe host e porta do Ollama. Nao exponha 11434 na internet.',
+                'Configure um servidor Ollama (LAN) ou use a API NVIDIA (build.nvidia.com).',
+          ),
+          const SizedBox(height: 12),
+          _ProviderSelector(
+            provider: _provider,
+            onChanged: (value) => setState(() => _provider = value),
           ),
           const SizedBox(height: 12),
           _ServerForm(
@@ -79,7 +88,9 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
             basePathController: _basePathController,
             headerNameController: _headerNameController,
             headerValueController: _headerValueController,
+            apiKeyController: _apiKeyController,
             protocol: _protocol,
+            provider: _provider,
             isTesting: _isTesting,
             onProtocolChanged: (value) => setState(() => _protocol = value),
             onSave: _save,
@@ -145,15 +156,24 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
   ServerProfile _buildProfile() {
     final headerName = _headerNameController.text.trim();
     final headerValue = _headerValueController.text.trim();
+    final isNvidia = _provider == ApiProvider.nvidia;
+    final apiKey = isNvidia ? _apiKeyController.text.trim() : null;
+    final protocol = isNvidia ? 'https' : _protocol;
+    final host = isNvidia ? 'integrate.api.nvidia.com' : _hostController.text.trim();
+    final port = isNvidia ? 443 : int.tryParse(_portController.text.trim()) ?? 11434;
+    final basePath = isNvidia ? '/v1' : _basePathController.text.trim();
+    final headers = headerName.isEmpty || headerValue.isEmpty
+        ? <String, String>{}
+        : {headerName: headerValue};
+
     return ServerProfile.create(
       id: const Uuid().v4(),
       name: _nameController.text,
-      input:
-          '$_protocol://${_hostController.text.trim()}:${_portController.text.trim()}',
-      basePath: _basePathController.text,
-      headers: headerName.isEmpty || headerValue.isEmpty
-          ? const {}
-          : {headerName: headerValue},
+      input: '$protocol://$host:$port',
+      basePath: basePath,
+      headers: headers,
+      provider: _provider,
+      apiKey: apiKey,
     );
   }
 
@@ -187,11 +207,20 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     });
     try {
       final profile = _buildProfile();
-      final models = await ref.read(ollamaApiClientProvider).listModels(profile);
-      setState(
-        () => _feedback =
-            'Servidor encontrado. ${models.length} modelo(s) carregado(s).',
-      );
+      final apiClient = ref.read(apiClientProvider);
+      if (profile.provider == ApiProvider.nvidia) {
+        final models = await apiClient.listNvidiaModels(profile);
+        setState(
+          () => _feedback =
+              'Conexão NVIDIA OK. ${models.length} modelo(s) disponível(is).',
+        );
+      } else {
+        final models = await apiClient.listOllamaModels(profile);
+        setState(
+          () => _feedback =
+              'Servidor Ollama encontrado. ${models.length} modelo(s) carregado(s).',
+        );
+      }
     } on AppException catch (error) {
       setState(() => _feedback = '${error.message}\nVerifique IP, porta, Wi-Fi e firewall.');
     } finally {
@@ -220,7 +249,9 @@ class _ServerForm extends StatelessWidget {
     required this.basePathController,
     required this.headerNameController,
     required this.headerValueController,
+    required this.apiKeyController,
     required this.protocol,
+    required this.provider,
     required this.isTesting,
     required this.onProtocolChanged,
     required this.onSave,
@@ -234,7 +265,9 @@ class _ServerForm extends StatelessWidget {
   final TextEditingController basePathController;
   final TextEditingController headerNameController;
   final TextEditingController headerValueController;
+  final TextEditingController apiKeyController;
   final String protocol;
+  final ApiProvider provider;
   final bool isTesting;
   final ValueChanged<String> onProtocolChanged;
   final VoidCallback onSave;
@@ -242,59 +275,87 @@ class _ServerForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNvidia = provider == ApiProvider.nvidia;
     return Form(
       key: formKey,
       child: Column(
         children: [
           TextFormField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'Nome amigavel'),
+            decoration: InputDecoration(
+              labelText: isNvidia ? 'Nome da configuração' : 'Nome amigavel',
+              hintText: isNvidia ? 'ex: NVIDIA API' : 'ex: Ollama LAN',
+            ),
           ),
           const SizedBox(height: 10),
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'http', label: Text('HTTP')),
-              ButtonSegment(value: 'https', label: Text('HTTPS')),
-            ],
-            selected: {protocol},
-            onSelectionChanged: (values) => onProtocolChanged(values.first),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: hostController,
-            decoration: const InputDecoration(labelText: 'Host ou IP'),
-            validator: (value) =>
-                value == null || value.trim().isEmpty ? 'Informe o host.' : null,
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: portController,
-            decoration: const InputDecoration(labelText: 'Porta'),
-            keyboardType: TextInputType.number,
-            validator: (value) {
-              final port = int.tryParse(value ?? '');
-              if (port == null || port < 1 || port > 65535) {
-                return 'Informe uma porta entre 1 e 65535.';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: basePathController,
-            decoration: const InputDecoration(labelText: 'Base path opcional'),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: headerNameController,
-            decoration: const InputDecoration(labelText: 'Header opcional'),
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: headerValueController,
-            decoration: const InputDecoration(labelText: 'Token/valor opcional'),
-            obscureText: true,
-          ),
+          if (!isNvidia) ...[
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'http', label: Text('HTTP')),
+                ButtonSegment(value: 'https', label: Text('HTTPS')),
+              ],
+              selected: {protocol},
+              onSelectionChanged: (values) => onProtocolChanged(values.first),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: hostController,
+              decoration: const InputDecoration(labelText: 'Host ou IP'),
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Informe o host.' : null,
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: portController,
+              decoration: const InputDecoration(labelText: 'Porta'),
+              keyboardType: TextInputType.number,
+              validator: (value) {
+                final port = int.tryParse(value ?? '');
+                if (port == null || port < 1 || port > 65535) {
+                  return 'Informe uma porta entre 1 e 65535.';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: basePathController,
+              decoration: const InputDecoration(labelText: 'Base path opcional'),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: headerNameController,
+              decoration: const InputDecoration(labelText: 'Header opcional'),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: headerValueController,
+              decoration: const InputDecoration(labelText: 'Token/valor opcional'),
+              obscureText: true,
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (isNvidia) ...[
+            _InfoStrip(
+              icon: Icons.info_outline,
+              title: 'API NVIDIA',
+              message:
+                  'A URL base será configurada automaticamente (https://integrate.api.nvidia.com/v1).',
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: apiKeyController,
+              decoration: const InputDecoration(
+                labelText: 'NVIDIA API Key',
+                hintText: 'nvapi-...',
+                helperText: 'Obtenha em https://build.nvidia.com/',
+              ),
+              obscureText: true,
+              validator: (value) =>
+                  value == null || value.trim().isEmpty ? 'Informe a API Key NVIDIA.' : null,
+            ),
+            const SizedBox(height: 10),
+          ],
           const SizedBox(height: 12),
           Row(
             children: [
@@ -307,7 +368,7 @@ class _ServerForm extends StatelessWidget {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.wifi_tethering),
-                  label: const Text('Testar'),
+                  label: Text(isNvidia ? 'Testar NVIDIA' : 'Testar Ollama'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -321,6 +382,52 @@ class _ServerForm extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProviderSelector extends StatelessWidget {
+  const _ProviderSelector({
+    required this.provider,
+    required this.onChanged,
+  });
+
+  final ApiProvider provider;
+  final ValueChanged<ApiProvider> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Provedor', style: Theme.of(context).textTheme.labelLarge),
+            const SizedBox(height: 8),
+            SegmentedButton<ApiProvider>(
+              segments: const [
+                ButtonSegment(
+                  value: ApiProvider.ollama,
+                  label: Text('Ollama (Local/LAN)'),
+                  icon: Icon(Icons.dns_outlined),
+                ),
+                ButtonSegment(
+                  value: ApiProvider.nvidia,
+                  label: Text('NVIDIA API (build.nvidia.com)'),
+                  icon: Icon(Icons.cloud_outlined),
+                ),
+              ],
+              selected: {provider},
+              onSelectionChanged: (values) => onChanged(values.first),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/app_exception.dart';
-import '../../../../core/network/ollama_api_client.dart';
-import '../../../../core/network/ollama_stream_parser.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/stream_parser.dart';
 import '../domain/chat_context_builder.dart';
 import '../domain/entities/chat_character.dart';
 import '../domain/entities/chat_message.dart';
@@ -25,7 +25,7 @@ class ChatController extends ChangeNotifier {
     this.onConversationChanged,
   });
 
-  final OllamaApiClient apiClient;
+  final ApiClient apiClient;
   final ConversationRepository conversationRepository;
   final ServerProfile server;
   final String model;
@@ -34,7 +34,7 @@ class ChatController extends ChangeNotifier {
   final VoidCallback? onConversationChanged;
   final _uuid = const Uuid();
 
-  StreamSubscription<OllamaChatChunk>? _subscription;
+  StreamSubscription<ChatChunk>? _subscription;
   Conversation? conversation;
   List<ChatMessage> messages = const [];
   bool isStreaming = false;
@@ -131,10 +131,10 @@ class ChatController extends ChangeNotifier {
         )
         .listen(
           (chunk) {
-            final nextThinking = chunk.kind == OllamaChatChunkKind.thinking
+            final nextThinking = chunk.kind == ChatChunkKind.thinking
                 ? assistantMessage.thinking + chunk.text
                 : assistantMessage.thinking;
-            final nextContent = chunk.kind == OllamaChatChunkKind.content
+            final nextContent = chunk.kind == ChatChunkKind.content
                 ? assistantMessage.content + chunk.text
                 : assistantMessage.content;
             assistantMessage = _replaceAssistant(

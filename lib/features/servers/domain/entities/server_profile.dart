@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import '../../../../core/errors/app_exception.dart';
 
+enum ApiProvider { ollama, nvidia }
+
 class ServerProfile {
   const ServerProfile({
     required this.id,
@@ -14,6 +16,9 @@ class ServerProfile {
     this.basePath,
     this.headers = const {},
     this.lastConnectedAt,
+    this.provider = ApiProvider.ollama,
+    this.apiKey,
+    this.defaultModel,
   });
 
   factory ServerProfile.create({
@@ -26,9 +31,16 @@ class ServerProfile {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastConnectedAt,
+    ApiProvider provider = ApiProvider.ollama,
+    String? apiKey,
+    String? defaultModel,
   }) {
     final parsed = _parseInput(input.trim(), fallbackPort: port);
     final now = DateTime.now().toUtc();
+    final defaultHeaders = <String, String>{...headers};
+    if (provider == ApiProvider.nvidia && apiKey != null && apiKey.isNotEmpty) {
+      defaultHeaders['Authorization'] = 'Bearer $apiKey';
+    }
     return ServerProfile(
       id: id,
       name: name.trim().isEmpty ? 'Ollama' : name.trim(),
@@ -36,14 +48,18 @@ class ServerProfile {
       host: parsed.host,
       port: parsed.port,
       basePath: _normalizeBasePath(basePath ?? parsed.basePath),
-      headers: Map.unmodifiable(headers),
+      headers: Map.unmodifiable(defaultHeaders),
       createdAt: createdAt ?? now,
       updatedAt: updatedAt ?? now,
       lastConnectedAt: lastConnectedAt,
+      provider: provider,
+      apiKey: apiKey,
+      defaultModel: defaultModel,
     );
   }
 
   factory ServerProfile.fromJson(Map<String, dynamic> json) {
+    final providerStr = json['provider'] as String? ?? 'ollama';
     return ServerProfile(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -59,6 +75,9 @@ class ServerProfile {
       lastConnectedAt: json['lastConnectedAt'] == null
           ? null
           : DateTime.parse(json['lastConnectedAt'] as String),
+      provider: providerStr == 'nvidia' ? ApiProvider.nvidia : ApiProvider.ollama,
+      apiKey: json['apiKey'] as String?,
+      defaultModel: json['defaultModel'] as String?,
     );
   }
 
@@ -72,6 +91,9 @@ class ServerProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? lastConnectedAt;
+  final ApiProvider provider;
+  final String? apiKey;
+  final String? defaultModel;
 
   String get baseUrl => resolve('').toString().replaceAll(RegExp(r'/$'), '');
 
@@ -99,6 +121,9 @@ class ServerProfile {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastConnectedAt,
+    ApiProvider? provider,
+    String? apiKey,
+    String? defaultModel,
   }) {
     return ServerProfile(
       id: id ?? this.id,
@@ -111,6 +136,9 @@ class ServerProfile {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+      provider: provider ?? this.provider,
+      apiKey: apiKey ?? this.apiKey,
+      defaultModel: defaultModel ?? this.defaultModel,
     );
   }
 
@@ -126,6 +154,9 @@ class ServerProfile {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'lastConnectedAt': lastConnectedAt?.toIso8601String(),
+      'provider': provider.name,
+      'apiKey': apiKey,
+      'defaultModel': defaultModel,
     };
   }
 
