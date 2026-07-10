@@ -24,7 +24,7 @@ void main() {
       ),
     );
 
-    expect(find.text('Servidor Ollama'), findsOneWidget);
+    expect(find.text('Servidor'), findsOneWidget);
     expect(find.text('Host ou IP'), findsOneWidget);
   });
 
