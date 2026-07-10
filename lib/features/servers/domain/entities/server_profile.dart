@@ -136,7 +136,7 @@ class ServerProfile {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
-      provider: provider ?? this.provider,
+      provider: provider != null ? provider : this.provider,
       apiKey: apiKey ?? this.apiKey,
       defaultModel: defaultModel ?? this.defaultModel,
     );
