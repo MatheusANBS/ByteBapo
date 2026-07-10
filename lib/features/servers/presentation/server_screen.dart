@@ -160,7 +160,7 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     final protocol = isNvidia ? 'https' : _protocol;
     final host = isNvidia ? 'integrate.api.nvidia.com' : _hostController.text.trim();
     final port = isNvidia ? 443 : int.tryParse(_portController.text.trim()) ?? 11434;
-    final basePath = isNvidia ? '/v1' : _basePathController.text.trim();
+    final basePath = isNvidia ? '' : _basePathController.text.trim();
     final headers = headerName.isEmpty || headerValue.isEmpty
         ? <String, String>{}
         : {headerName: headerValue};
@@ -339,7 +339,7 @@ class _ServerForm extends StatelessWidget {
               icon: Icons.info_outline,
               title: 'API NVIDIA',
               message:
-                  'A URL base será configurada automaticamente (https://integrate.api.nvidia.com/v1).',
+                  'A URL base será configurada automaticamente (https://integrate.api.nvidia.com).',
             ),
             const SizedBox(height: 10),
             TextFormField(
