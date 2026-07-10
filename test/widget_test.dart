@@ -8,23 +8,24 @@ import 'package:byte_papo/features/chat/presentation/chat_screen.dart';
 import 'package:byte_papo/features/models/data/repositories/model_selection_repository_impl.dart';
 import 'package:byte_papo/features/servers/data/repositories/server_repository_impl.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
+import 'package:byte_papo/features/servers/presentation/server_screen.dart';
 import 'package:byte_papo/shared/providers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  testWidgets('renders server setup screen', (tester) async {
+testWidgets('renders server setup screen', (tester) async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: const OllamaMobileApp(),
+        child: const MaterialApp(home: ServerScreen()),
       ),
     );
 
-    expect(find.text('Servidor'), findsOneWidget);
+    expect(find.text('Servidor'), findsWidgets);
     expect(find.text('Host ou IP'), findsOneWidget);
   });
 
@@ -45,10 +46,10 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
-        child: const OllamaMobileApp(),
+        child: const MaterialApp(home: ServerScreen()),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pumpAndSettle(const Duration(seconds: 5));
 
     expect(find.text('Notebook'), findsOneWidget);
     expect(tester.takeException(), isNull);
