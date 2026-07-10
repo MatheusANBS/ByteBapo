@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:byte_papo/app/app.dart';
 import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/conversation.dart';
