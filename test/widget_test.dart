@@ -52,6 +52,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await tester.dragUntilVisible(
+      find.text('Notebook'),
+      find.byType(ListView),
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('Notebook'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
