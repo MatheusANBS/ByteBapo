@@ -148,7 +148,7 @@ class ApiClient {
       'temperature': options.temperature,
       'top_p': options.topP,
       'max_tokens': options.maxTokens,
-      if (options.stopSequences.isNotEmpty) 'stop': options.stopSequences,
+      if (options.stopSequences?.isNotEmpty ?? false) 'stop': options.stopSequences,
       if (options.seed != null) 'seed': options.seed,
     });
 

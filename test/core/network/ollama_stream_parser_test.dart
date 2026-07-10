@@ -128,7 +128,7 @@ void main() {
 
     test('parses SSE format with tool calls', () async {
       final stream = _byteStream([
-        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"sum","arguments":"{\"a\":1,\"b\":2}"}}]}}]}\n\n',
+        'data: {"choices":[{"delta":{"tool_calls":[{"index":0,"id":"call_1","function":{"name":"sum","arguments":"{\\"a\\":1,\\"b\\":2}"}}]}}]}\n\n',
         'data: [DONE]\n\n',
       ]);
 
