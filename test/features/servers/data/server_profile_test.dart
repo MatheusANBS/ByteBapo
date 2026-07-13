@@ -80,6 +80,19 @@ void main() {
       expect(profile.headers['Authorization'], 'Bearer nvapi-test');
     });
 
+    test('never serializes a NVIDIA API key', () {
+      final profile = ServerProfile.create(
+        id: 'nvidia-1',
+        name: 'NVIDIA',
+        input: 'https://integrate.api.nvidia.com',
+        provider: ApiProvider.nvidia,
+        apiKey: 'nvapi-secret',
+      );
+
+      expect(profile.toJson(), isNot(containsPair('apiKey', anything)));
+      expect(profile.toJson().toString(), isNot(contains('nvapi-secret')));
+    });
+
     test('repairs a persisted NVIDIA profile without v1', () {
       final profile = ServerProfile.fromJson({
         'id': 'nvidia-1',

@@ -182,12 +182,10 @@ class ServerProfile {
       'host': host,
       'port': port,
       'basePath': basePath,
-      'headers': headers,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
       'lastConnectedAt': lastConnectedAt?.toIso8601String(),
       'provider': provider.name,
-      'apiKey': apiKey,
       'defaultModel': defaultModel,
     };
   }

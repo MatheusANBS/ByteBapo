@@ -157,11 +157,13 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     );
   }
 
-  ServerProfile _buildProfile() {
+  ServerProfile _buildProfile({bool includeApiKey = true}) {
     final headerName = _headerNameController.text.trim();
     final headerValue = _headerValueController.text.trim();
     final isNvidia = _provider == ApiProvider.nvidia;
-    final apiKey = isNvidia ? _apiKeyController.text.trim() : null;
+    final apiKey = includeApiKey && isNvidia
+        ? _apiKeyController.text.trim()
+        : null;
     final protocol = isNvidia ? 'https' : _protocol;
     final host = isNvidia
         ? 'integrate.api.nvidia.com'
@@ -190,9 +192,14 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
       return;
     }
     try {
-      final profile = _buildProfile();
+      final profile = _buildProfile(includeApiKey: false);
       final repository = ref.read(serverRepositoryProvider);
-      await repository.save(profile);
+      await repository.save(
+        profile,
+        apiKey: _provider == ApiProvider.nvidia
+            ? _apiKeyController.text.trim()
+            : null,
+      );
       await repository.setActiveServerId(profile.id);
       ref.invalidate(serverProfilesProvider);
       ref.invalidate(activeServerProvider);

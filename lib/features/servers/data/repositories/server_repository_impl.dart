@@ -25,7 +25,7 @@ class ServerRepositoryImpl implements ServerRepository {
   }
 
   @override
-  Future<void> save(ServerProfile profile) async {
+  Future<void> save(ServerProfile profile, {String? apiKey}) async {
     final profiles = await list();
     final index = profiles.indexWhere((item) => item.id == profile.id);
     final updated = profile.copyWith(updatedAt: DateTime.now().toUtc());

@@ -3,7 +3,7 @@ import '../entities/server_profile.dart';
 abstract class ServerRepository {
   Future<List<ServerProfile>> list();
 
-  Future<void> save(ServerProfile profile);
+  Future<void> save(ServerProfile profile, {String? apiKey});
 
   Future<void> remove(String id);
 

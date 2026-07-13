@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/database/app_database.dart' hide ServerProfile;
 import '../core/network/api_client.dart';
+import '../core/secure_storage/server_secret_store.dart';
 import '../features/chat/data/repositories/character_repository_impl.dart';
 import '../features/chat/data/repositories/conversation_repository_impl.dart';
 import '../features/chat/data/repositories/instructions_repository_impl.dart';
@@ -12,7 +14,7 @@ import '../features/chat/domain/repositories/conversation_repository.dart';
 import '../features/chat/domain/repositories/instructions_repository.dart';
 import '../features/models/data/repositories/model_selection_repository_impl.dart';
 import '../features/models/domain/repositories/model_selection_repository.dart';
-import '../features/servers/data/repositories/server_repository_impl.dart';
+import '../features/servers/data/repositories/drift_server_repository.dart';
 import '../features/servers/domain/entities/server_profile.dart';
 import '../features/servers/domain/repositories/server_repository.dart';
 
@@ -20,9 +22,19 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('SharedPreferences must be overridden in main.');
 });
 
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
+  throw UnimplementedError('AppDatabase must be overridden in main.');
+});
+
+final serverSecretStoreProvider = Provider<ServerSecretStore>((ref) {
+  return FlutterServerSecretStore();
+});
+
 final serverRepositoryProvider = Provider<ServerRepository>((ref) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ServerRepositoryImpl(preferences: prefs);
+  return DriftServerRepository(
+    database: ref.watch(appDatabaseProvider),
+    secrets: ref.watch(serverSecretStoreProvider),
+  );
 });
 
 final modelSelectionRepositoryProvider = Provider<ModelSelectionRepository>((
