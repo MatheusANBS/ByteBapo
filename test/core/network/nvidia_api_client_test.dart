@@ -107,6 +107,40 @@ void main() {
       ),
     );
   });
+
+  test('reports NVIDIA authentication failures for HTTP 401', () async {
+    final client = ApiClient(
+      httpClient: MockClient((request) async => http.Response('', 401)),
+    );
+
+    await expectLater(
+      client.listNvidiaModels(_nvidiaServer()),
+      throwsA(
+        isA<NvidiaApiException>().having(
+          (error) => error.message,
+          'message',
+          contains('API key'),
+        ),
+      ),
+    );
+  });
+
+  test('reports missing NVIDIA endpoints for HTTP 404', () async {
+    final client = ApiClient(
+      httpClient: MockClient((request) async => http.Response('', 404)),
+    );
+
+    await expectLater(
+      client.listNvidiaModels(_nvidiaServer()),
+      throwsA(
+        isA<NvidiaApiException>().having(
+          (error) => error.message,
+          'message',
+          contains('endpoint'),
+        ),
+      ),
+    );
+  });
 }
 
 ServerProfile _nvidiaServer() {
