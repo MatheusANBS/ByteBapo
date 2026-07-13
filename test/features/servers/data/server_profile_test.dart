@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:byte_papo/core/errors/app_exception.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 
@@ -61,6 +61,69 @@ void main() {
         ),
         throwsA(isA<InvalidServerException>()),
       );
+    });
+
+    test('normalizes NVIDIA profiles to the v1 base path', () {
+      final profile = ServerProfile.create(
+        id: 'nvidia-1',
+        name: 'NVIDIA',
+        input: 'https://integrate.api.nvidia.com:443',
+        provider: ApiProvider.nvidia,
+        apiKey: 'nvapi-test',
+      );
+
+      expect(profile.basePath, '/v1');
+      expect(
+        profile.resolve('models').toString(),
+        'https://integrate.api.nvidia.com/v1/models',
+      );
+      expect(profile.headers['Authorization'], 'Bearer nvapi-test');
+    });
+
+    test('repairs a persisted NVIDIA profile without v1', () {
+      final profile = ServerProfile.fromJson({
+        'id': 'nvidia-1',
+        'name': 'NVIDIA',
+        'protocol': 'https',
+        'host': 'integrate.api.nvidia.com',
+        'port': 443,
+        'basePath': null,
+        'headers': <String, String>{},
+        'createdAt': '2026-07-13T00:00:00.000Z',
+        'updatedAt': '2026-07-13T00:00:00.000Z',
+        'lastConnectedAt': null,
+        'provider': 'nvidia',
+        'apiKey': 'nvapi-restored',
+        'defaultModel': null,
+      });
+
+      expect(profile.basePath, '/v1');
+      expect(profile.headers['Authorization'], 'Bearer nvapi-restored');
+      expect(
+        profile.resolve('chat/completions').toString(),
+        'https://integrate.api.nvidia.com/v1/chat/completions',
+      );
+    });
+
+    test('keeps an Ollama persisted base path unchanged', () {
+      final profile = ServerProfile.fromJson({
+        'id': 'ollama-1',
+        'name': 'Ollama',
+        'protocol': 'https',
+        'host': 'ollama.example.com',
+        'port': 443,
+        'basePath': '/ollama',
+        'headers': <String, String>{},
+        'createdAt': '2026-07-13T00:00:00.000Z',
+        'updatedAt': '2026-07-13T00:00:00.000Z',
+        'lastConnectedAt': null,
+        'provider': 'ollama',
+        'apiKey': null,
+        'defaultModel': null,
+      });
+
+      expect(profile.basePath, '/ollama');
+      expect(profile.resolve('api/tags').path, '/ollama/api/tags');
     });
   });
 }

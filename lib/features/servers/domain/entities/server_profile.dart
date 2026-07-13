@@ -47,7 +47,10 @@ class ServerProfile {
       protocol: parsed.protocol,
       host: parsed.host,
       port: parsed.port,
-      basePath: _normalizeBasePath(basePath ?? parsed.basePath),
+      basePath: _normalizeProviderBasePath(
+        provider,
+        basePath ?? parsed.basePath,
+      ),
       headers: Map.unmodifiable(defaultHeaders),
       createdAt: createdAt ?? now,
       updatedAt: updatedAt ?? now,
@@ -61,24 +64,29 @@ class ServerProfile {
   factory ServerProfile.fromJson(Map<String, dynamic> json) {
     final providerStr = json['provider'] as String? ?? 'ollama';
     final apiKey = json['apiKey'] as String?;
-    final provider = providerStr == 'nvidia' ? ApiProvider.nvidia : ApiProvider.ollama;
-    
+    final provider = providerStr == 'nvidia'
+        ? ApiProvider.nvidia
+        : ApiProvider.ollama;
+
     final defaultHeaders = (json['headers'] as Map<String, dynamic>? ?? {}).map(
       (key, value) => MapEntry(key, value.toString()),
     );
-    
+
     // Recria o header Authorization se for NVIDIA com API key
     if (provider == ApiProvider.nvidia && apiKey != null && apiKey.isNotEmpty) {
       defaultHeaders['Authorization'] = 'Bearer $apiKey';
     }
-    
+
     return ServerProfile(
       id: json['id'] as String,
       name: json['name'] as String,
       protocol: json['protocol'] as String,
       host: json['host'] as String,
       port: json['port'] as int,
-      basePath: json['basePath'] as String?,
+      basePath: _normalizeProviderBasePath(
+        provider,
+        json['basePath'] as String?,
+      ),
       headers: defaultHeaders,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -138,19 +146,24 @@ class ServerProfile {
     final newProvider = provider ?? this.provider;
     final newApiKey = apiKey ?? this.apiKey;
     final newHeaders = {...(headers ?? this.headers)};
-    
+
     // Recria o header Authorization se for NVIDIA com API key
-    if (newProvider == ApiProvider.nvidia && newApiKey != null && newApiKey.isNotEmpty) {
+    if (newProvider == ApiProvider.nvidia &&
+        newApiKey != null &&
+        newApiKey.isNotEmpty) {
       newHeaders['Authorization'] = 'Bearer $newApiKey';
     }
-    
+
     return ServerProfile(
       id: id ?? this.id,
       name: name ?? this.name,
       protocol: protocol ?? this.protocol,
       host: host ?? this.host,
       port: port ?? this.port,
-      basePath: basePath ?? this.basePath,
+      basePath: _normalizeProviderBasePath(
+        newProvider,
+        basePath ?? this.basePath,
+      ),
       headers: newHeaders,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -227,6 +240,16 @@ class ServerProfile {
     return withoutTrailing.startsWith('/')
         ? withoutTrailing
         : '/$withoutTrailing';
+  }
+
+  static String? _normalizeProviderBasePath(
+    ApiProvider provider,
+    String? path,
+  ) {
+    if (provider == ApiProvider.nvidia) {
+      return '/v1';
+    }
+    return _normalizeBasePath(path);
   }
 }
 
