@@ -100,7 +100,10 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
             _FeedbackStrip(message: _feedback!),
           ],
           const SizedBox(height: 18),
-          Text('Servidores salvos', style: Theme.of(context).textTheme.titleSmall),
+          Text(
+            'Servidores salvos',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
           const SizedBox(height: 8),
           profiles.when(
             data: (items) {
@@ -113,32 +116,34 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Material(
-                        color:
-                            Theme.of(context).colorScheme.surfaceContainerHighest,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                           side: BorderSide(
-                            color: Theme.of(context).colorScheme.outline
-                                .withValues(alpha: 0.14),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.outline.withValues(alpha: 0.14),
                           ),
                         ),
                         child: ListTile(
-                        title: Text(profile.name),
-                        subtitle: Text(profile.baseUrl),
-                        leading: const Icon(Icons.dns_outlined),
-                        trailing: IconButton(
-                          tooltip: 'Selecionar',
-                          icon: const Icon(Icons.check_circle_outline),
-                          onPressed: () => _select(profile),
+                          title: Text(profile.name),
+                          subtitle: Text(profile.baseUrl),
+                          leading: const Icon(Icons.dns_outlined),
+                          trailing: IconButton(
+                            tooltip: 'Selecionar',
+                            icon: const Icon(Icons.check_circle_outline),
+                            onPressed: () => _select(profile),
+                          ),
+                          onTap: () {
+                            _nameController.text = profile.name;
+                            _hostController.text = profile.host;
+                            _portController.text = profile.port.toString();
+                            _basePathController.text = profile.basePath ?? '';
+                            setState(() => _protocol = profile.protocol);
+                          },
                         ),
-                        onTap: () {
-                          _nameController.text = profile.name;
-                          _hostController.text = profile.host;
-                          _portController.text = profile.port.toString();
-                          _basePathController.text = profile.basePath ?? '';
-                          setState(() => _protocol = profile.protocol);
-                        },
-                      ),
                       ),
                     ),
                 ],
@@ -158,9 +163,13 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     final isNvidia = _provider == ApiProvider.nvidia;
     final apiKey = isNvidia ? _apiKeyController.text.trim() : null;
     final protocol = isNvidia ? 'https' : _protocol;
-    final host = isNvidia ? 'integrate.api.nvidia.com' : _hostController.text.trim();
-    final port = isNvidia ? 443 : int.tryParse(_portController.text.trim()) ?? 11434;
-    final basePath = isNvidia ? '' : _basePathController.text.trim();
+    final host = isNvidia
+        ? 'integrate.api.nvidia.com'
+        : _hostController.text.trim();
+    final port = isNvidia
+        ? 443
+        : int.tryParse(_portController.text.trim()) ?? 11434;
+    final basePath = isNvidia ? '/v1' : _basePathController.text.trim();
     final headers = headerName.isEmpty || headerValue.isEmpty
         ? <String, String>{}
         : {headerName: headerValue};
@@ -221,7 +230,10 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
         );
       }
     } on AppException catch (error) {
-      setState(() => _feedback = '${error.message}\nVerifique IP, porta, Wi-Fi e firewall.');
+      final guidance = _provider == ApiProvider.nvidia
+          ? ''
+          : '\nVerifique IP, porta, Wi-Fi e firewall.';
+      setState(() => _feedback = '${error.message}$guidance');
     } finally {
       if (mounted) {
         setState(() => _isTesting = false);
@@ -300,8 +312,9 @@ class _ServerForm extends StatelessWidget {
             TextFormField(
               controller: hostController,
               decoration: const InputDecoration(labelText: 'Host ou IP'),
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Informe o host.' : null,
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Informe o host.'
+                  : null,
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -319,7 +332,9 @@ class _ServerForm extends StatelessWidget {
             const SizedBox(height: 10),
             TextFormField(
               controller: basePathController,
-              decoration: const InputDecoration(labelText: 'Base path opcional'),
+              decoration: const InputDecoration(
+                labelText: 'Base path opcional',
+              ),
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -329,7 +344,9 @@ class _ServerForm extends StatelessWidget {
             const SizedBox(height: 10),
             TextFormField(
               controller: headerValueController,
-              decoration: const InputDecoration(labelText: 'Token/valor opcional'),
+              decoration: const InputDecoration(
+                labelText: 'Token/valor opcional',
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 10),
@@ -339,7 +356,8 @@ class _ServerForm extends StatelessWidget {
               icon: Icons.info_outline,
               title: 'API NVIDIA',
               message:
-                  'A URL base será configurada automaticamente (https://integrate.api.nvidia.com).',
+                  'A URL base será configurada automaticamente '
+                  '(https://integrate.api.nvidia.com/v1).',
             ),
             const SizedBox(height: 10),
             TextFormField(
@@ -350,8 +368,9 @@ class _ServerForm extends StatelessWidget {
                 helperText: 'Obtenha em https://build.nvidia.com/',
               ),
               obscureText: true,
-              validator: (value) =>
-                  value == null || value.trim().isEmpty ? 'Informe a API Key NVIDIA.' : null,
+              validator: (value) => value == null || value.trim().isEmpty
+                  ? 'Informe a API Key NVIDIA.'
+                  : null,
             ),
             const SizedBox(height: 10),
           ],
@@ -387,10 +406,7 @@ class _ServerForm extends StatelessWidget {
 }
 
 class _ProviderSelector extends StatelessWidget {
-  const _ProviderSelector({
-    required this.provider,
-    required this.onChanged,
-  });
+  const _ProviderSelector({required this.provider, required this.onChanged});
 
   final ApiProvider provider;
   final ValueChanged<ApiProvider> onChanged;
@@ -481,7 +497,9 @@ class _FeedbackStrip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.45),
+        color: Theme.of(
+          context,
+        ).colorScheme.primaryContainer.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(

@@ -1,10 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:byte_papo/core/errors/app_exception.dart';
+import 'package:byte_papo/core/network/api_client.dart';
 import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/conversation.dart';
 import 'package:byte_papo/features/chat/presentation/chat_screen.dart';
 import 'package:byte_papo/features/models/data/repositories/model_selection_repository_impl.dart';
+import 'package:byte_papo/features/models/domain/entities/nvidia_model.dart';
 import 'package:byte_papo/features/servers/data/repositories/server_repository_impl.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 import 'package:byte_papo/features/servers/presentation/server_screen.dart';
@@ -298,4 +301,43 @@ void main() {
     expect(find.text('Carregando modelo'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('shows NVIDIA errors without local network guidance', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(preferences),
+          apiClientProvider.overrideWithValue(_FailingNvidiaApiClient()),
+        ],
+        child: const MaterialApp(home: ServerScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('NVIDIA API (build.nvidia.com)'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'NVIDIA API Key'),
+      'nvapi-test',
+    );
+    await tester.ensureVisible(find.text('Testar NVIDIA'));
+    await tester.tap(find.text('Testar NVIDIA'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Falha NVIDIA de teste.'), findsOneWidget);
+    expect(find.textContaining('Wi-Fi'), findsNothing);
+    expect(find.textContaining('firewall'), findsNothing);
+  });
+}
+
+class _FailingNvidiaApiClient extends ApiClient {
+  @override
+  Future<List<NvidiaModel>> listNvidiaModels(ServerProfile server) {
+    throw const NvidiaApiException(NvidiaApiFailure('Falha NVIDIA de teste.'));
+  }
 }
