@@ -1,62 +1,49 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'tables/chat_tables.dart';
+import 'tables/server_tables.dart';
+
 part 'app_database.g.dart';
 
 abstract final class AppSettingKey {
   static const activeServerId = 'active_server_id';
+  static const activeCharacterId = 'active_character_id';
+  static const globalPrompt = 'global_prompt';
 }
 
-class ServerProfiles extends Table {
-  TextColumn get id => text()();
-  TextColumn get name => text()();
-  TextColumn get provider => text()();
-  TextColumn get protocol => text()();
-  TextColumn get host => text()();
-  IntColumn get port => integer()();
-  TextColumn get basePath => text().nullable()();
-  TextColumn get avatarPath => text().nullable()();
-  TextColumn get apiKeyAlias => text().nullable()();
-  TextColumn get lastConnectionStatus =>
-      text().withDefault(const Constant('unknown'))();
-  DateTimeColumn get lastConnectedAt => dateTime().nullable()();
-  DateTimeColumn get lastCheckedAt => dateTime().nullable()();
-  DateTimeColumn get createdAt => dateTime()();
-  DateTimeColumn get updatedAt => dateTime()();
-
-  @override
-  Set<Column<Object>> get primaryKey => {id};
-}
-
-class AppSettings extends Table {
-  TextColumn get key => text()();
-  TextColumn get value => text().nullable()();
-
-  @override
-  Set<Column<Object>> get primaryKey => {key};
-}
-
-class SelectedModels extends Table {
-  TextColumn get serverProfileId =>
-      text().references(ServerProfiles, #id, onDelete: KeyAction.cascade)();
-  TextColumn get modelId => text()();
-  DateTimeColumn get updatedAt => dateTime()();
-
-  @override
-  Set<Column<Object>> get primaryKey => {serverProfileId};
-}
-
-@DriftDatabase(tables: [ServerProfiles, AppSettings, SelectedModels])
+@DriftDatabase(
+  tables: [
+    ServerProfiles,
+    AppSettings,
+    SelectedModels,
+    ChatCharacters,
+    Conversations,
+    ChatMessages,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   AppDatabase.defaults() : super(driftDatabase(name: 'bytepapo'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        await migrator.createTable(selectedModels);
+      }
+      if (from < 3) {
+        await migrator.createTable(chatCharacters);
+      }
+      if (from < 4) {
+        await migrator.createTable(conversations);
+        await migrator.createTable(chatMessages);
+      }
+    },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },

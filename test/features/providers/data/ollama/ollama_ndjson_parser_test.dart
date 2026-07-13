@@ -26,4 +26,18 @@ void main() {
       expect(chunks.map((chunk) => chunk.text), ['raciocínio', 'resposta']);
     },
   );
+
+  test('emits tool calls from Ollama message chunks', () async {
+    final chunks = await OllamaNdjsonParser.parse(
+      Stream.value(
+        utf8.encode(
+          '{"message":{"tool_calls":[{"function":{"name":"weather","arguments":{"city":"Sao Paulo"}}}]}}\n',
+        ),
+      ),
+    ).toList();
+
+    expect(chunks.single.kind, ChatChunkKind.toolCall);
+    expect(chunks.single.toolCall?.name, 'weather');
+    expect(chunks.single.toolCall?.arguments, '{"city":"Sao Paulo"}');
+  });
 }

@@ -26,6 +26,36 @@ class OllamaNdjsonParser {
         if (content is String && content.isNotEmpty) {
           yield ChatChunk(kind: ChatChunkKind.content, text: content);
         }
+        final toolCalls = message['tool_calls'];
+        if (toolCalls is List) {
+          for (var index = 0; index < toolCalls.length; index++) {
+            final toolCall = toolCalls[index];
+            if (toolCall is! Map<String, dynamic>) {
+              continue;
+            }
+            final function = toolCall['function'];
+            if (function is! Map<String, dynamic>) {
+              continue;
+            }
+            final name = function['name'];
+            if (name is! String || name.isEmpty) {
+              continue;
+            }
+            final arguments = function['arguments'];
+            yield ChatChunk(
+              kind: ChatChunkKind.toolCall,
+              text: '',
+              toolCall: ToolCallDelta(
+                index: index,
+                id: toolCall['id'] as String?,
+                name: name,
+                arguments: arguments is String
+                    ? arguments
+                    : jsonEncode(arguments),
+              ),
+            );
+          }
+        }
       }
       if (payload['done'] == true) {
         break;

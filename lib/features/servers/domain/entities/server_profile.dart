@@ -4,6 +4,8 @@ import '../../../../core/errors/app_exception.dart';
 
 enum ApiProvider { ollama, nvidia }
 
+enum ServerConnectionStatus { unknown, connected, failed }
+
 class ServerProfile {
   const ServerProfile({
     required this.id,
@@ -16,6 +18,9 @@ class ServerProfile {
     this.basePath,
     this.headers = const {},
     this.lastConnectedAt,
+    this.lastCheckedAt,
+    this.lastConnectionStatus = ServerConnectionStatus.unknown,
+    this.avatarPath,
     this.provider = ApiProvider.ollama,
     this.apiKey,
     this.defaultModel,
@@ -31,6 +36,10 @@ class ServerProfile {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastConnectedAt,
+    DateTime? lastCheckedAt,
+    ServerConnectionStatus lastConnectionStatus =
+        ServerConnectionStatus.unknown,
+    String? avatarPath,
     ApiProvider provider = ApiProvider.ollama,
     String? apiKey,
     String? defaultModel,
@@ -55,6 +64,9 @@ class ServerProfile {
       createdAt: createdAt ?? now,
       updatedAt: updatedAt ?? now,
       lastConnectedAt: lastConnectedAt,
+      lastCheckedAt: lastCheckedAt,
+      lastConnectionStatus: lastConnectionStatus,
+      avatarPath: avatarPath,
       provider: provider,
       apiKey: apiKey,
       defaultModel: defaultModel,
@@ -109,6 +121,9 @@ class ServerProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? lastConnectedAt;
+  final DateTime? lastCheckedAt;
+  final ServerConnectionStatus lastConnectionStatus;
+  final String? avatarPath;
   final ApiProvider provider;
   final String? apiKey;
   final String? defaultModel;
@@ -139,6 +154,9 @@ class ServerProfile {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? lastConnectedAt,
+    DateTime? lastCheckedAt,
+    ServerConnectionStatus? lastConnectionStatus,
+    String? avatarPath,
     ApiProvider? provider,
     String? apiKey,
     String? defaultModel,
@@ -168,6 +186,9 @@ class ServerProfile {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       lastConnectedAt: lastConnectedAt ?? this.lastConnectedAt,
+      lastCheckedAt: lastCheckedAt ?? this.lastCheckedAt,
+      lastConnectionStatus: lastConnectionStatus ?? this.lastConnectionStatus,
+      avatarPath: avatarPath ?? this.avatarPath,
       provider: provider ?? this.provider,
       apiKey: apiKey ?? this.apiKey,
       defaultModel: defaultModel ?? this.defaultModel,

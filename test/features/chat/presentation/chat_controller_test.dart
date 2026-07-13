@@ -1,22 +1,23 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
+import 'package:byte_papo/core/database/app_database.dart'
+    hide ChatMessage, Conversation, ServerProfile;
+import 'package:byte_papo/features/chat/data/repositories/drift_conversation_repository.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/generation_options.dart';
 import 'package:byte_papo/features/chat/presentation/chat_controller.dart';
 import 'package:byte_papo/features/providers/domain/chat_completion_gateway.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:drift/native.dart';
 
 void main() {
   test('send notifies listeners that conversation history changed', () async {
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    await _seedServer(database);
     var historyChangedCount = 0;
     final controller = ChatController(
       chatGateway: _ChatGateway(),
-      conversationRepository: ConversationRepositoryImpl(
-        preferences: preferences,
-      ),
+      conversationRepository: DriftConversationRepository(database: database),
       server: ServerProfile.create(
         id: 'server-1',
         name: 'Local',
@@ -30,11 +31,14 @@ void main() {
     await Future<void>.delayed(Duration.zero);
 
     expect(historyChangedCount, greaterThan(0));
+    expect(controller.conversation!.serverNameSnapshot, 'Local');
+    expect(controller.conversation!.providerSnapshot, 'ollama');
   });
 
   test('send persists tool calls emitted by the provider gateway', () async {
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    await _seedServer(database);
     final controller = ChatController(
       chatGateway: _ChatGateway(
         chunks: const [
@@ -50,9 +54,7 @@ void main() {
           ),
         ],
       ),
-      conversationRepository: ConversationRepositoryImpl(
-        preferences: preferences,
-      ),
+      conversationRepository: DriftConversationRepository(database: database),
       server: ServerProfile.create(
         id: 'server-1',
         name: 'Local',
@@ -85,4 +87,22 @@ class _ChatGateway implements ChatCompletionGateway {
     required List<ChatMessage> messages,
     GenerationOptions options = const GenerationOptions(),
   }) => Stream.fromIterable(chunks);
+}
+
+Future<void> _seedServer(AppDatabase database) {
+  final now = DateTime.utc(2026);
+  return database
+      .into(database.serverProfiles)
+      .insert(
+        ServerProfilesCompanion.insert(
+          id: 'server-1',
+          name: 'Local',
+          provider: 'ollama',
+          protocol: 'http',
+          host: '127.0.0.1',
+          port: 11434,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
 }

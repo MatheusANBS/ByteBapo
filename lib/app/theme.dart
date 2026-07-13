@@ -1,27 +1,34 @@
 import 'package:flutter/material.dart';
 
 ThemeData buildAppTheme() {
-  const seed = Color(0xFF2DD4BF);
+  const cyan = Color(0xFF20D9F5);
+  const background = Color(0xFF091015);
+  const surface = Color(0xFF141D25);
   final scheme = ColorScheme.fromSeed(
-    seedColor: seed,
+    seedColor: cyan,
     brightness: Brightness.dark,
-    surface: const Color(0xFF101418),
+    surface: surface,
   );
 
   return ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
     visualDensity: VisualDensity.compact,
-    scaffoldBackgroundColor: const Color(0xFF0B0F12),
+    scaffoldBackgroundColor: background,
     appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF0B0F12),
+      backgroundColor: background,
       centerTitle: false,
       elevation: 0,
       scrolledUnderElevation: 0,
-      toolbarHeight: 52,
+      toolbarHeight: 76,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 27,
+        fontWeight: FontWeight.w700,
+      ),
     ),
     cardTheme: CardThemeData(
-      color: const Color(0xFF151B20),
+      color: surface,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
@@ -33,7 +40,7 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       filled: true,
-      fillColor: const Color(0xFF11171C),
+      fillColor: surface,
       isDense: true,
       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     ),
@@ -50,6 +57,15 @@ ThemeData buildAppTheme() {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
+    ),
+    navigationBarTheme: const NavigationBarThemeData(
+      height: 92,
+      backgroundColor: Color(0xFF111B23),
+      indicatorColor: Colors.transparent,
+      labelTextStyle: WidgetStatePropertyAll(
+        TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      iconTheme: WidgetStatePropertyAll(IconThemeData(size: 29)),
     ),
   );
 }

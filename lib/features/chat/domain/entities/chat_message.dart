@@ -43,7 +43,7 @@ class ChatMessage {
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    final toolCallsJson = json['toolCalls'] as List<dynamic>?;
+    final toolCallsJson = json['toolCalls'];
     return ChatMessage(
       id: json['id'] as String,
       conversationId: json['conversationId'] as String,
@@ -54,12 +54,12 @@ class ChatMessage {
       status: ChatMessageStatus.fromName(
         json['status'] as String? ?? 'completed',
       ),
-      toolCalls:
-          toolCallsJson
-              ?.whereType<Map<String, dynamic>>()
-              .map(ToolCall.fromJson)
-              .toList(growable: false) ??
-          const [],
+      toolCalls: toolCallsJson is List
+          ? toolCallsJson
+                .whereType<Map<String, dynamic>>()
+                .map(ToolCall.fromJson)
+                .toList(growable: false)
+          : const [],
       toolCallId: json['toolCallId'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
@@ -94,21 +94,6 @@ class ChatMessage {
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
-  }
-
-  Map<String, dynamic> toOllamaJson() {
-    return {'role': role.name, 'content': content};
-  }
-
-  Map<String, dynamic> toOpenAIJson() {
-    final map = <String, dynamic>{'role': role.name, 'content': content};
-    if (toolCalls != null && toolCalls!.isNotEmpty) {
-      map['tool_calls'] = toolCalls!.map((t) => t.toJson()).toList();
-    }
-    if (toolCallId != null) {
-      map['tool_call_id'] = toolCallId;
-    }
-    return map;
   }
 }
 

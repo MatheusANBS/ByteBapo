@@ -4,6 +4,12 @@ import '../entities/conversation.dart';
 abstract class ConversationRepository {
   Future<List<Conversation>> listConversations();
 
+  Future<List<Conversation>> listConversationsPage({
+    String? query,
+    int limit = 50,
+    int offset = 0,
+  });
+
   Future<void> saveConversation(Conversation conversation);
 
   Future<void> removeConversation(String id);

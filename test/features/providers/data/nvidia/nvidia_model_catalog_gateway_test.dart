@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:byte_papo/features/providers/data/nvidia/nvidia_model_catalog_gateway.dart';
+import 'package:byte_papo/core/errors/app_exception.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -29,6 +30,17 @@ void main() {
     expect(captured!.headers['Authorization'], 'Bearer nvapi-test');
     expect(models.single.id, 'meta/llama-3.1-8b-instruct');
     expect(models.single.provider, ApiProvider.nvidia);
+  });
+
+  test('translates NVIDIA catalog HTTP failures to a provider exception', () {
+    final gateway = NvidiaModelCatalogGateway(
+      httpClient: MockClient((_) async => http.Response('', 401)),
+    );
+
+    expect(
+      () => gateway.listModels(_server()),
+      throwsA(isA<NvidiaApiException>()),
+    );
   });
 }
 

@@ -7,6 +7,12 @@ abstract class ServerRepository {
 
   Future<void> remove(String id);
 
+  Future<void> recordConnection(
+    String id, {
+    required ServerConnectionStatus status,
+    required DateTime checkedAt,
+  });
+
   Future<String?> getActiveServerId();
 
   Future<void> setActiveServerId(String? id);

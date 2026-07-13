@@ -72,8 +72,11 @@ class ChatController extends ChangeNotifier {
       id: conversationId,
       title: _titleFrom(text),
       serverProfileId: server.id,
+      serverNameSnapshot: server.name,
+      providerSnapshot: server.provider.name,
       model: model,
       characterId: character?.id,
+      characterNameSnapshot: character?.name,
       systemPrompt: composeSystemPrompt(
         globalInstructions: globalInstructions,
         characterInstructions: character?.instructions,
@@ -108,6 +111,7 @@ class ChatController extends ChangeNotifier {
     isStreaming = true;
     notifyListeners();
     final toolCallDeltas = <int, _ToolCallAccumulator>{};
+    var streamFailed = false;
 
     await conversationRepository.saveConversation(conversation!);
     await conversationRepository.saveMessage(userMessage);
@@ -153,6 +157,7 @@ class ChatController extends ChangeNotifier {
             );
           },
           onError: (Object error) async {
+            streamFailed = true;
             final message = error is AppException
                 ? error.message
                 : 'Nao consegui concluir a resposta. Tente reenviar.';
@@ -169,6 +174,9 @@ class ChatController extends ChangeNotifier {
             notifyListeners();
           },
           onDone: () async {
+            if (streamFailed) {
+              return;
+            }
             assistantMessage = _replaceAssistant(
               assistantMessage,
               content: assistantMessage.content,
@@ -179,8 +187,11 @@ class ChatController extends ChangeNotifier {
               id: conversation!.id,
               title: conversation!.title,
               serverProfileId: conversation!.serverProfileId,
+              serverNameSnapshot: conversation!.serverNameSnapshot,
+              providerSnapshot: conversation!.providerSnapshot,
               model: conversation!.model,
               characterId: conversation!.characterId,
+              characterNameSnapshot: conversation!.characterNameSnapshot,
               systemPrompt: conversation!.systemPrompt,
               createdAt: conversation!.createdAt,
               updatedAt: DateTime.now().toUtc(),

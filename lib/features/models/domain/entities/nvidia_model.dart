@@ -15,7 +15,7 @@ class NvidiaModel {
       object: json['object'] as String? ?? 'model',
       created: json['created'] as int? ?? 0,
       ownedBy: json['owned_by'] as String? ?? 'nvidia',
-      permission: json['permission'] as List<dynamic>?,
+      permission: json['permission'] as List<Object?>?,
       root: json['root'] as String?,
       parent: json['parent'] as String?,
     );
@@ -25,7 +25,7 @@ class NvidiaModel {
   final String object;
   final int created;
   final String ownedBy;
-  final List<dynamic>? permission;
+  final List<Object?>? permission;
   final String? root;
   final String? parent;
 

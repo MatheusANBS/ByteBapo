@@ -1,7 +1,10 @@
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../chat/domain/entities/chat_message.dart';
 import '../../../chat/domain/entities/generation_options.dart';
 import '../../../servers/domain/entities/server_profile.dart';
@@ -26,17 +29,48 @@ class OllamaChatCompletionGateway implements ChatCompletionGateway {
       ..headers['Content-Type'] = 'application/json'
       ..body = jsonEncode({
         'model': model,
-        'messages': messages.map((message) => message.toOllamaJson()).toList(),
+        'messages': messages.map(_ollamaMessageJson).toList(),
         'stream': options.stream,
         if (options.thinking != ThinkingMode.modelDefault)
           'think': options.thinking.ollamaValue,
         if (options.toOllamaOptionsJson().isNotEmpty)
           'options': options.toOllamaOptionsJson(),
       });
-    final response = await _httpClient.send(request);
+    final http.StreamedResponse response;
+    try {
+      response = await _httpClient.send(request);
+    } on TimeoutException catch (error) {
+      throw OllamaApiException(const TimeoutFailure(), error);
+    } on SocketException catch (error) {
+      throw OllamaApiException(const NetworkFailure(), error);
+    } on HandshakeException catch (error) {
+      throw OllamaApiException(
+        const OllamaApiFailure('A conexao TLS com o Ollama falhou.'),
+        error,
+      );
+    } on http.ClientException catch (error) {
+      throw OllamaApiException(const NetworkFailure(), error);
+    }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw StateError('Ollama chat returned HTTP ${response.statusCode}.');
+      throw OllamaApiException(
+        OllamaApiFailure(_ollamaChatHttpMessage(response.statusCode)),
+      );
     }
     yield* OllamaNdjsonParser.parse(response.stream);
   }
+}
+
+Map<String, String> _ollamaMessageJson(ChatMessage message) => {
+  'role': message.role.name,
+  'content': message.content,
+};
+
+String _ollamaChatHttpMessage(int statusCode) {
+  if (statusCode == 404) {
+    return 'O endpoint ou modelo Ollama nao foi encontrado.';
+  }
+  if (statusCode >= 500) {
+    return 'O servidor Ollama esta indisponivel no momento.';
+  }
+  return 'O servidor Ollama retornou uma resposta inesperada.';
 }

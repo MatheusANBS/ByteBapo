@@ -44,4 +44,18 @@ class DriftModelSelectionRepository implements ModelSelectionRepository {
           ),
         );
   }
+
+  @override
+  Future<void> selectModelAndActivateServer({
+    required String model,
+    required String serverProfileId,
+  }) {
+    return database.transaction(() async {
+      await setSelectedModel(model, serverProfileId: serverProfileId);
+      await database.writeSetting(
+        AppSettingKey.activeServerId,
+        serverProfileId,
+      );
+    });
+  }
 }
