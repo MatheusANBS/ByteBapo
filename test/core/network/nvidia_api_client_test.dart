@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:byte_papo/core/errors/app_exception.dart';
 import 'package:byte_papo/core/network/api_client.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/models/domain/entities/nvidia_model.dart';
@@ -86,6 +87,25 @@ void main() {
     expect(body['model'], 'meta/llama-3.3-70b-instruct');
     expect(body['stream'], isTrue);
     expect(tokens, ['Olá']);
+  });
+
+  test('wraps NVIDIA transport failures as NvidiaApiException', () async {
+    final client = ApiClient(
+      httpClient: MockClient((request) async {
+        throw http.ClientException('connection failed', request.url);
+      }),
+    );
+
+    await expectLater(
+      client.listNvidiaModels(_nvidiaServer()),
+      throwsA(
+        isA<NvidiaApiException>().having(
+          (error) => error.message,
+          'message',
+          contains('NVIDIA'),
+        ),
+      ),
+    );
   });
 }
 

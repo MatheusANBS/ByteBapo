@@ -27,6 +27,7 @@ class ApiClient {
       () => _httpClient
           .get(server.resolve(OllamaEndpoints.tags), headers: server.headers)
           .timeout(_timeout),
+      provider: server.provider,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -55,6 +56,7 @@ class ApiClient {
       () => _httpClient
           .get(server.resolve(NvidiaEndpoints.models), headers: server.headers)
           .timeout(_timeout),
+      provider: server.provider,
     );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
@@ -120,7 +122,10 @@ class ApiClient {
         'options': options.toOllamaOptionsJson(),
     });
 
-    final response = await _guardHttp(() => _httpClient.send(request));
+    final response = await _guardHttp(
+      () => _httpClient.send(request),
+      provider: server.provider,
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw OllamaApiException(_ollamaFailureForStatus(response.statusCode));
@@ -141,18 +146,20 @@ class ApiClient {
     request.headers['Accept'] = 'text/event-stream';
     request.body = jsonEncode({
       'model': model,
-      'messages': messages
-          .map((message) => message.toOpenAIJson())
-          .toList(),
+      'messages': messages.map((message) => message.toOpenAIJson()).toList(),
       'stream': options.stream,
       'temperature': options.temperature,
       'top_p': options.topP,
       'max_tokens': options.maxTokens,
-      if (options.stopSequences?.isNotEmpty ?? false) 'stop': options.stopSequences,
+      if (options.stopSequences?.isNotEmpty ?? false)
+        'stop': options.stopSequences,
       if (options.seed != null) 'seed': options.seed,
     });
 
-    final response = await _guardHttp(() => _httpClient.send(request));
+    final response = await _guardHttp(
+      () => _httpClient.send(request),
+      provider: server.provider,
+    );
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw NvidiaApiException(_nvidiaFailureForStatus(response.statusCode));
@@ -177,18 +184,61 @@ class ApiClient {
         .map((chunk) => chunk.text);
   }
 
-  Future<T> _guardHttp<T>(Future<T> Function() request) async {
+  Future<T> _guardHttp<T>(
+    Future<T> Function() request, {
+    required ApiProvider provider,
+  }) async {
     try {
       return await request();
     } on TimeoutException catch (error) {
-      throw OllamaApiException(const TimeoutFailure(), error);
+      throw _transportException(
+        provider: provider,
+        ollamaFailure: const TimeoutFailure(),
+        nvidiaFailure: const NvidiaApiFailure(
+          'Tempo esgotado ao conectar à API NVIDIA.',
+        ),
+        cause: error,
+      );
     } on SocketException catch (error) {
-      throw OllamaApiException(const NetworkFailure(), error);
+      throw _transportException(
+        provider: provider,
+        ollamaFailure: const NetworkFailure(),
+        nvidiaFailure: const NvidiaApiFailure(
+          'Não foi possível conectar à API NVIDIA.',
+        ),
+        cause: error,
+      );
     } on HandshakeException catch (error) {
-      throw OllamaApiException(const CleartextBlockedFailure(), error);
+      throw _transportException(
+        provider: provider,
+        ollamaFailure: const CleartextBlockedFailure(),
+        nvidiaFailure: const NvidiaApiFailure(
+          'Falha na conexão segura com a API NVIDIA.',
+        ),
+        cause: error,
+      );
     } on http.ClientException catch (error) {
-      throw OllamaApiException(const NetworkFailure(), error);
+      throw _transportException(
+        provider: provider,
+        ollamaFailure: const NetworkFailure(),
+        nvidiaFailure: const NvidiaApiFailure(
+          'Não foi possível conectar à API NVIDIA.',
+        ),
+        cause: error,
+      );
     }
+  }
+
+  AppException _transportException({
+    required ApiProvider provider,
+    required AppFailure ollamaFailure,
+    required AppFailure nvidiaFailure,
+    required Object cause,
+  }) {
+    if (provider == ApiProvider.nvidia) {
+      return NvidiaApiException(nvidiaFailure, cause);
+    }
+    return OllamaApiException(ollamaFailure, cause);
   }
 
   AppFailure _ollamaFailureForStatus(int statusCode) {
