@@ -40,7 +40,8 @@ class ModelsScreen extends ConsumerWidget {
       ),
       body: server.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text('Nao consegui carregar servidor.')),
+        error: (_, _) =>
+            const Center(child: Text('Nao consegui carregar servidor.')),
         data: (activeServer) {
           if (activeServer == null) {
             return _EmptyModels(
@@ -78,18 +79,18 @@ class ModelsScreen extends ConsumerWidget {
                   final isSelected = selected == modelId;
                   return Material(
                     color: isSelected
-                        ? Theme.of(context)
-                            .colorScheme
-                            .primaryContainer
-                            .withValues(alpha: 0.34)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.34)
                         : Theme.of(context).colorScheme.surfaceContainerHighest,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                       side: BorderSide(
                         color: isSelected
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outline
-                                .withValues(alpha: 0.14),
+                            : Theme.of(
+                                context,
+                              ).colorScheme.outline.withValues(alpha: 0.14),
                       ),
                     ),
                     child: ListTile(
@@ -147,15 +148,21 @@ class ModelsScreen extends ConsumerWidget {
       }
       if (model.modifiedAt != null) {
         parts.add(
-            'atualizado em ${DateFormat.yMd('pt_BR').format(model.modifiedAt!.toLocal())}');
+          'atualizado em ${DateFormat.yMd('pt_BR').format(model.modifiedAt!.toLocal())}',
+        );
       }
       return parts.isEmpty ? 'Sem detalhes adicionais' : parts.join(' · ');
     }
     if (model is NvidiaModel) {
       final parts = <String>[];
       if (model.created != 0) {
-        final date = DateTime.fromMillisecondsSinceEpoch(model.created * 1000, isUtc: true);
-        parts.add('criado em ${DateFormat.yMd('pt_BR').format(date.toLocal())}');
+        final date = DateTime.fromMillisecondsSinceEpoch(
+          model.created * 1000,
+          isUtc: true,
+        );
+        parts.add(
+          'criado em ${DateFormat.yMd('pt_BR').format(date.toLocal())}',
+        );
       }
       if (model.ownedBy.isNotEmpty) {
         parts.add('por ${model.ownedBy}');

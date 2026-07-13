@@ -12,7 +12,8 @@ class ChatChunk {
   final ToolCallDelta? toolCall;
 
   @override
-  String toString() => 'ChatChunk(kind: $kind, text: $text, toolCall: $toolCall)';
+  String toString() =>
+      'ChatChunk(kind: $kind, text: $text, toolCall: $toolCall)';
 }
 
 class ToolCallDelta {
@@ -127,10 +128,7 @@ class StreamParser {
       if (message is Map<String, dynamic>) {
         final thinking = message['thinking'];
         if (thinking is String && thinking.isNotEmpty) {
-          yield ChatChunk(
-            kind: ChatChunkKind.thinking,
-            text: thinking,
-          );
+          yield ChatChunk(kind: ChatChunkKind.thinking, text: thinking);
         }
 
         final content = message['content'];

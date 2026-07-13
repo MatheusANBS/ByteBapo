@@ -54,7 +54,8 @@ class ChatMessage {
       status: ChatMessageStatus.fromName(
         json['status'] as String? ?? 'completed',
       ),
-      toolCalls: toolCallsJson
+      toolCalls:
+          toolCallsJson
               ?.whereType<Map<String, dynamic>>()
               .map(ToolCall.fromJson)
               .toList(growable: false) ??
@@ -100,10 +101,7 @@ class ChatMessage {
   }
 
   Map<String, dynamic> toOpenAIJson() {
-    final map = <String, dynamic>{
-      'role': role.name,
-      'content': content,
-    };
+    final map = <String, dynamic>{'role': role.name, 'content': content};
     if (toolCalls != null && toolCalls!.isNotEmpty) {
       map['tool_calls'] = toolCalls!.map((t) => t.toJson()).toList();
     }
