@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/database/app_database.dart' hide ServerProfile;
-import '../core/network/api_client.dart';
 import '../core/secure_storage/server_secret_store.dart';
 import '../features/chat/data/repositories/character_repository_impl.dart';
 import '../features/chat/data/repositories/conversation_repository_impl.dart';
@@ -12,8 +11,14 @@ import '../features/chat/domain/entities/conversation.dart';
 import '../features/chat/domain/repositories/character_repository.dart';
 import '../features/chat/domain/repositories/conversation_repository.dart';
 import '../features/chat/domain/repositories/instructions_repository.dart';
-import '../features/models/data/repositories/model_selection_repository_impl.dart';
+import '../features/models/data/repositories/drift_model_selection_repository.dart';
 import '../features/models/domain/repositories/model_selection_repository.dart';
+import '../features/providers/data/nvidia/nvidia_chat_completion_gateway.dart';
+import '../features/providers/data/nvidia/nvidia_model_catalog_gateway.dart';
+import '../features/providers/data/ollama/ollama_chat_completion_gateway.dart';
+import '../features/providers/data/ollama/ollama_model_catalog_gateway.dart';
+import '../features/providers/domain/entities/available_model.dart';
+import '../features/providers/domain/provider_gateway_resolver.dart';
 import '../features/servers/data/repositories/drift_server_repository.dart';
 import '../features/servers/domain/entities/server_profile.dart';
 import '../features/servers/domain/repositories/server_repository.dart';
@@ -40,8 +45,9 @@ final serverRepositoryProvider = Provider<ServerRepository>((ref) {
 final modelSelectionRepositoryProvider = Provider<ModelSelectionRepository>((
   ref,
 ) {
-  final prefs = ref.watch(sharedPreferencesProvider);
-  return ModelSelectionRepositoryImpl(preferences: prefs);
+  return DriftModelSelectionRepository(
+    database: ref.watch(appDatabaseProvider),
+  );
 });
 
 final conversationRepositoryProvider = Provider<ConversationRepository>((ref) {
@@ -59,8 +65,19 @@ final instructionsRepositoryProvider = Provider<InstructionsRepository>((ref) {
   return InstructionsRepositoryImpl(preferences: prefs);
 });
 
-final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient();
+final providerGatewayResolverProvider = Provider<ProviderGatewayResolver>((
+  ref,
+) {
+  return ProviderGatewayResolver(
+    nvidia: ProviderGatewayBundle(
+      NvidiaModelCatalogGateway(),
+      NvidiaChatCompletionGateway(),
+    ),
+    ollama: ProviderGatewayBundle(
+      OllamaModelCatalogGateway(),
+      OllamaChatCompletionGateway(),
+    ),
+  );
 });
 
 final serverProfilesProvider = FutureProvider<List<ServerProfile>>((ref) {
@@ -90,16 +107,13 @@ final selectedModelProvider = FutureProvider<String?>((ref) async {
       .getSelectedModel(serverProfileId: server.id);
 });
 
-final modelsProvider = FutureProvider<List<dynamic>>((ref) async {
+final modelsProvider = FutureProvider<List<AvailableModel>>((ref) async {
   final server = await ref.watch(activeServerProvider.future);
   if (server == null) {
     return const [];
   }
-  final apiClient = ref.watch(apiClientProvider);
-  if (server.provider == ApiProvider.nvidia) {
-    return apiClient.listNvidiaModels(server);
-  }
-  return apiClient.listOllamaModels(server);
+  final resolver = ref.watch(providerGatewayResolverProvider);
+  return resolver.forProvider(server.provider).catalog.listModels(server);
 });
 
 final conversationsProvider = FutureProvider<List<Conversation>>((ref) {

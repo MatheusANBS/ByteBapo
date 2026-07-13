@@ -4,8 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/app_exception.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/ollama_stream_parser.dart';
 import '../domain/chat_context_builder.dart';
 import '../domain/entities/chat_character.dart';
 import '../domain/entities/chat_message.dart';
@@ -13,10 +11,11 @@ import '../domain/entities/conversation.dart';
 import '../domain/entities/generation_options.dart';
 import '../domain/repositories/conversation_repository.dart';
 import '../../servers/domain/entities/server_profile.dart';
+import '../../providers/domain/chat_completion_gateway.dart';
 
 class ChatController extends ChangeNotifier {
   ChatController({
-    required this.apiClient,
+    required this.chatGateway,
     required this.conversationRepository,
     required this.server,
     required this.model,
@@ -25,7 +24,7 @@ class ChatController extends ChangeNotifier {
     this.onConversationChanged,
   });
 
-  final ApiClient apiClient;
+  final ChatCompletionGateway chatGateway;
   final ConversationRepository conversationRepository;
   final ServerProfile server;
   final String model;
@@ -108,12 +107,13 @@ class ChatController extends ChangeNotifier {
     messages = [...messages, userMessage, assistantMessage];
     isStreaming = true;
     notifyListeners();
+    final toolCallDeltas = <int, _ToolCallAccumulator>{};
 
     await conversationRepository.saveConversation(conversation!);
     await conversationRepository.saveMessage(userMessage);
     onConversationChanged?.call();
 
-    _subscription = apiClient
+    _subscription = chatGateway
         .streamChat(
           server: server,
           model: model,
@@ -131,6 +131,13 @@ class ChatController extends ChangeNotifier {
         )
         .listen(
           (chunk) {
+            if (chunk.kind == ChatChunkKind.toolCall &&
+                chunk.toolCall != null) {
+              final delta = chunk.toolCall!;
+              toolCallDeltas[delta.index] =
+                  (toolCallDeltas[delta.index] ?? const _ToolCallAccumulator())
+                      .merge(delta);
+            }
             final nextThinking = chunk.kind == ChatChunkKind.thinking
                 ? assistantMessage.thinking + chunk.text
                 : assistantMessage.thinking;
@@ -142,6 +149,7 @@ class ChatController extends ChangeNotifier {
               content: nextContent,
               thinking: nextThinking,
               status: ChatMessageStatus.streaming,
+              toolCalls: _completedToolCalls(toolCallDeltas),
             );
           },
           onError: (Object error) async {
@@ -235,6 +243,7 @@ class ChatController extends ChangeNotifier {
     required String content,
     required String thinking,
     required ChatMessageStatus status,
+    List<ToolCall>? toolCalls,
   }) {
     final next = ChatMessage(
       id: previous.id,
@@ -244,6 +253,7 @@ class ChatController extends ChangeNotifier {
       thinking: thinking,
       model: previous.model,
       status: status,
+      toolCalls: toolCalls ?? previous.toolCalls,
       createdAt: previous.createdAt,
       updatedAt: DateTime.now().toUtc(),
     );
@@ -268,6 +278,35 @@ class ChatController extends ChangeNotifier {
     _subscription?.cancel();
     super.dispose();
   }
+}
+
+List<ToolCall> _completedToolCalls(
+  Map<int, _ToolCallAccumulator> accumulators,
+) {
+  final entries =
+      accumulators.entries.where((entry) => entry.value.isComplete).toList()
+        ..sort((left, right) => left.key.compareTo(right.key));
+  return entries.map((entry) => entry.value.toToolCall()).toList();
+}
+
+class _ToolCallAccumulator {
+  const _ToolCallAccumulator({this.id, this.name, this.arguments = ''});
+
+  final String? id;
+  final String? name;
+  final String arguments;
+
+  bool get isComplete => id != null && name != null;
+
+  _ToolCallAccumulator merge(ToolCallDelta delta) {
+    return _ToolCallAccumulator(
+      id: delta.id ?? id,
+      name: delta.name ?? name,
+      arguments: arguments + (delta.arguments ?? ''),
+    );
+  }
+
+  ToolCall toToolCall() => ToolCall(id: id!, name: name!, arguments: arguments);
 }
 
 extension _LastOrNull<T> on List<T> {

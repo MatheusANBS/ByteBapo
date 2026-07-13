@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../shared/providers.dart';
+import '../../providers/domain/entities/available_model.dart';
 import '../domain/entities/nvidia_model.dart';
 import '../domain/entities/ollama_model.dart';
 import '../../servers/domain/entities/server_profile.dart';
@@ -75,7 +76,7 @@ class ModelsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
                 itemBuilder: (context, index) {
                   final model = items[index];
-                  final modelId = _getModelId(model);
+                  final modelId = model.id;
                   final isSelected = selected == modelId;
                   return Material(
                     color: isSelected
@@ -130,17 +131,15 @@ class ModelsScreen extends ConsumerWidget {
     );
   }
 
-  String _getModelId(dynamic model) {
-    if (model is OllamaModel) {
-      return model.model;
-    }
-    if (model is NvidiaModel) {
-      return model.id;
-    }
-    return model.toString();
-  }
-
   String _subtitle(dynamic model, ApiProvider provider) {
+    if (model is AvailableModel) {
+      if (model.sizeBytes != null) {
+        return _formatBytes(model.sizeBytes!);
+      }
+      return model.provider == ApiProvider.nvidia
+          ? 'Modelo NVIDIA'
+          : 'Modelo Ollama';
+    }
     if (model is OllamaModel) {
       final parts = <String>[];
       if (model.size != null) {

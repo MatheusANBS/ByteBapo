@@ -222,15 +222,18 @@ class _ServerScreenState extends ConsumerState<ServerScreen> {
     });
     try {
       final profile = _buildProfile();
-      final apiClient = ref.read(apiClientProvider);
+      final catalog = ref
+          .read(providerGatewayResolverProvider)
+          .forProvider(profile.provider)
+          .catalog;
       if (profile.provider == ApiProvider.nvidia) {
-        final models = await apiClient.listNvidiaModels(profile);
+        final models = await catalog.listModels(profile);
         setState(
           () => _feedback =
               'Conexão NVIDIA OK. ${models.length} modelo(s) disponível(is).',
         );
       } else {
-        final models = await apiClient.listOllamaModels(profile);
+        final models = await catalog.listModels(profile);
         setState(
           () => _feedback =
               'Servidor Ollama encontrado. ${models.length} modelo(s) carregado(s).',

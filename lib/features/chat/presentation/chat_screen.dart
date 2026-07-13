@@ -22,7 +22,10 @@ final chatControllerProvider = Provider.autoDispose
         return null;
       }
       final controller = ChatController(
-        apiClient: ref.watch(apiClientProvider),
+        chatGateway: ref
+            .watch(providerGatewayResolverProvider)
+            .forProvider(server.provider)
+            .chat,
         conversationRepository: ref.watch(conversationRepositoryProvider),
         server: server,
         model: model,

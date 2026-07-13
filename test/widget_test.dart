@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:byte_papo/core/errors/app_exception.dart';
-import 'package:byte_papo/core/network/api_client.dart';
 import 'package:byte_papo/features/chat/data/repositories/conversation_repository_impl.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/conversation.dart';
 import 'package:byte_papo/features/chat/presentation/chat_screen.dart';
 import 'package:byte_papo/features/models/data/repositories/model_selection_repository_impl.dart';
-import 'package:byte_papo/features/models/domain/entities/nvidia_model.dart';
+import 'package:byte_papo/features/chat/domain/entities/generation_options.dart';
+import 'package:byte_papo/features/providers/domain/chat_completion_gateway.dart';
+import 'package:byte_papo/features/providers/domain/entities/available_model.dart';
+import 'package:byte_papo/features/providers/domain/model_catalog_gateway.dart';
+import 'package:byte_papo/features/providers/domain/provider_gateway_resolver.dart';
 import 'package:byte_papo/features/servers/data/repositories/server_repository_impl.dart';
 import 'package:byte_papo/features/servers/domain/entities/server_profile.dart';
 import 'package:byte_papo/features/servers/presentation/server_screen.dart';
@@ -312,7 +315,18 @@ void main() {
       ProviderScope(
         overrides: [
           sharedPreferencesProvider.overrideWithValue(preferences),
-          apiClientProvider.overrideWithValue(_FailingNvidiaApiClient()),
+          providerGatewayResolverProvider.overrideWithValue(
+            ProviderGatewayResolver(
+              nvidia: ProviderGatewayBundle(
+                _FailingNvidiaCatalogGateway(),
+                _UnusedChatCompletionGateway(),
+              ),
+              ollama: ProviderGatewayBundle(
+                _FailingNvidiaCatalogGateway(),
+                _UnusedChatCompletionGateway(),
+              ),
+            ),
+          ),
         ],
         child: const MaterialApp(home: ServerScreen()),
       ),
@@ -335,9 +349,19 @@ void main() {
   });
 }
 
-class _FailingNvidiaApiClient extends ApiClient {
+class _FailingNvidiaCatalogGateway implements ModelCatalogGateway {
   @override
-  Future<List<NvidiaModel>> listNvidiaModels(ServerProfile server) {
+  Future<List<AvailableModel>> listModels(ServerProfile server) {
     throw const NvidiaApiException(NvidiaApiFailure('Falha NVIDIA de teste.'));
   }
+}
+
+class _UnusedChatCompletionGateway implements ChatCompletionGateway {
+  @override
+  Stream<ChatChunk> streamChat({
+    required ServerProfile server,
+    required String model,
+    required List<ChatMessage> messages,
+    options = const GenerationOptions(),
+  }) => throw UnimplementedError();
 }

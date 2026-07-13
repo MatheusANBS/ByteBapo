@@ -1050,11 +1050,289 @@ class AppSettingsCompanion extends UpdateCompanion<AppSetting> {
   }
 }
 
+class $SelectedModelsTable extends SelectedModels
+    with TableInfo<$SelectedModelsTable, SelectedModel> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SelectedModelsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _serverProfileIdMeta = const VerificationMeta(
+    'serverProfileId',
+  );
+  @override
+  late final GeneratedColumn<String> serverProfileId = GeneratedColumn<String>(
+    'server_profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES server_profiles (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _modelIdMeta = const VerificationMeta(
+    'modelId',
+  );
+  @override
+  late final GeneratedColumn<String> modelId = GeneratedColumn<String>(
+    'model_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [serverProfileId, modelId, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'selected_models';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SelectedModel> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('server_profile_id')) {
+      context.handle(
+        _serverProfileIdMeta,
+        serverProfileId.isAcceptableOrUnknown(
+          data['server_profile_id']!,
+          _serverProfileIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_serverProfileIdMeta);
+    }
+    if (data.containsKey('model_id')) {
+      context.handle(
+        _modelIdMeta,
+        modelId.isAcceptableOrUnknown(data['model_id']!, _modelIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_modelIdMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {serverProfileId};
+  @override
+  SelectedModel map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SelectedModel(
+      serverProfileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_profile_id'],
+      )!,
+      modelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}model_id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SelectedModelsTable createAlias(String alias) {
+    return $SelectedModelsTable(attachedDatabase, alias);
+  }
+}
+
+class SelectedModel extends DataClass implements Insertable<SelectedModel> {
+  final String serverProfileId;
+  final String modelId;
+  final DateTime updatedAt;
+  const SelectedModel({
+    required this.serverProfileId,
+    required this.modelId,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['server_profile_id'] = Variable<String>(serverProfileId);
+    map['model_id'] = Variable<String>(modelId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SelectedModelsCompanion toCompanion(bool nullToAbsent) {
+    return SelectedModelsCompanion(
+      serverProfileId: Value(serverProfileId),
+      modelId: Value(modelId),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SelectedModel.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SelectedModel(
+      serverProfileId: serializer.fromJson<String>(json['serverProfileId']),
+      modelId: serializer.fromJson<String>(json['modelId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'serverProfileId': serializer.toJson<String>(serverProfileId),
+      'modelId': serializer.toJson<String>(modelId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SelectedModel copyWith({
+    String? serverProfileId,
+    String? modelId,
+    DateTime? updatedAt,
+  }) => SelectedModel(
+    serverProfileId: serverProfileId ?? this.serverProfileId,
+    modelId: modelId ?? this.modelId,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SelectedModel copyWithCompanion(SelectedModelsCompanion data) {
+    return SelectedModel(
+      serverProfileId: data.serverProfileId.present
+          ? data.serverProfileId.value
+          : this.serverProfileId,
+      modelId: data.modelId.present ? data.modelId.value : this.modelId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SelectedModel(')
+          ..write('serverProfileId: $serverProfileId, ')
+          ..write('modelId: $modelId, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(serverProfileId, modelId, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SelectedModel &&
+          other.serverProfileId == this.serverProfileId &&
+          other.modelId == this.modelId &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SelectedModelsCompanion extends UpdateCompanion<SelectedModel> {
+  final Value<String> serverProfileId;
+  final Value<String> modelId;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SelectedModelsCompanion({
+    this.serverProfileId = const Value.absent(),
+    this.modelId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SelectedModelsCompanion.insert({
+    required String serverProfileId,
+    required String modelId,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : serverProfileId = Value(serverProfileId),
+       modelId = Value(modelId),
+       updatedAt = Value(updatedAt);
+  static Insertable<SelectedModel> custom({
+    Expression<String>? serverProfileId,
+    Expression<String>? modelId,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (serverProfileId != null) 'server_profile_id': serverProfileId,
+      if (modelId != null) 'model_id': modelId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SelectedModelsCompanion copyWith({
+    Value<String>? serverProfileId,
+    Value<String>? modelId,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SelectedModelsCompanion(
+      serverProfileId: serverProfileId ?? this.serverProfileId,
+      modelId: modelId ?? this.modelId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (serverProfileId.present) {
+      map['server_profile_id'] = Variable<String>(serverProfileId.value);
+    }
+    if (modelId.present) {
+      map['model_id'] = Variable<String>(modelId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SelectedModelsCompanion(')
+          ..write('serverProfileId: $serverProfileId, ')
+          ..write('modelId: $modelId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ServerProfilesTable serverProfiles = $ServerProfilesTable(this);
   late final $AppSettingsTable appSettings = $AppSettingsTable(this);
+  late final $SelectedModelsTable selectedModels = $SelectedModelsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1062,7 +1340,18 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     serverProfiles,
     appSettings,
+    selectedModels,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'server_profiles',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('selected_models', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$ServerProfilesTableCreateCompanionBuilder =
@@ -1101,6 +1390,33 @@ typedef $$ServerProfilesTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
+
+final class $$ServerProfilesTableReferences
+    extends BaseReferences<_$AppDatabase, $ServerProfilesTable, ServerProfile> {
+  $$ServerProfilesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static MultiTypedResultKey<$SelectedModelsTable, List<SelectedModel>>
+  _selectedModelsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.selectedModels,
+    aliasName: 'server_profiles__id__selected_models__server_profile_id',
+  );
+
+  $$SelectedModelsTableProcessedTableManager get selectedModelsRefs {
+    final manager = $$SelectedModelsTableTableManager($_db, $_db.selectedModels)
+        .filter(
+          (f) => f.serverProfileId.id.sqlEquals($_itemColumn<String>('id')!),
+        );
+
+    final cache = $_typedResult.readTableOrNull(_selectedModelsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$ServerProfilesTableFilterComposer
     extends Composer<_$AppDatabase, $ServerProfilesTable> {
@@ -1180,6 +1496,31 @@ class $$ServerProfilesTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> selectedModelsRefs(
+    Expression<bool> Function($$SelectedModelsTableFilterComposer f) f,
+  ) {
+    final $$SelectedModelsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.selectedModels,
+      getReferencedColumn: (t) => t.serverProfileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SelectedModelsTableFilterComposer(
+            $db: $db,
+            $table: $db.selectedModels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ServerProfilesTableOrderingComposer
@@ -1322,6 +1663,31 @@ class $$ServerProfilesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  Expression<T> selectedModelsRefs<T extends Object>(
+    Expression<T> Function($$SelectedModelsTableAnnotationComposer a) f,
+  ) {
+    final $$SelectedModelsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.selectedModels,
+      getReferencedColumn: (t) => t.serverProfileId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SelectedModelsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.selectedModels,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ServerProfilesTableTableManager
@@ -1335,12 +1701,9 @@ class $$ServerProfilesTableTableManager
           $$ServerProfilesTableAnnotationComposer,
           $$ServerProfilesTableCreateCompanionBuilder,
           $$ServerProfilesTableUpdateCompanionBuilder,
-          (
-            ServerProfile,
-            BaseReferences<_$AppDatabase, $ServerProfilesTable, ServerProfile>,
-          ),
+          (ServerProfile, $$ServerProfilesTableReferences),
           ServerProfile,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool selectedModelsRefs})
         > {
   $$ServerProfilesTableTableManager(
     _$AppDatabase db,
@@ -1424,9 +1787,47 @@ class $$ServerProfilesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ServerProfilesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({selectedModelsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (selectedModelsRefs) db.selectedModels,
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (selectedModelsRefs)
+                    await $_getPrefetchedData<
+                      ServerProfile,
+                      $ServerProfilesTable,
+                      SelectedModel
+                    >(
+                      currentTable: table,
+                      referencedTable: $$ServerProfilesTableReferences
+                          ._selectedModelsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$ServerProfilesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).selectedModelsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where(
+                            (e) => e.serverProfileId == item.id,
+                          ),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -1441,12 +1842,9 @@ typedef $$ServerProfilesTableProcessedTableManager =
       $$ServerProfilesTableAnnotationComposer,
       $$ServerProfilesTableCreateCompanionBuilder,
       $$ServerProfilesTableUpdateCompanionBuilder,
-      (
-        ServerProfile,
-        BaseReferences<_$AppDatabase, $ServerProfilesTable, ServerProfile>,
-      ),
+      (ServerProfile, $$ServerProfilesTableReferences),
       ServerProfile,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool selectedModelsRefs})
     >;
 typedef $$AppSettingsTableCreateCompanionBuilder =
     AppSettingsCompanion Function({
@@ -1587,6 +1985,293 @@ typedef $$AppSettingsTableProcessedTableManager =
       AppSetting,
       PrefetchHooks Function()
     >;
+typedef $$SelectedModelsTableCreateCompanionBuilder =
+    SelectedModelsCompanion Function({
+      required String serverProfileId,
+      required String modelId,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SelectedModelsTableUpdateCompanionBuilder =
+    SelectedModelsCompanion Function({
+      Value<String> serverProfileId,
+      Value<String> modelId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$SelectedModelsTableReferences
+    extends BaseReferences<_$AppDatabase, $SelectedModelsTable, SelectedModel> {
+  $$SelectedModelsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $ServerProfilesTable _serverProfileIdTable(_$AppDatabase db) => db
+      .serverProfiles
+      .createAlias('selected_models__server_profile_id__server_profiles__id');
+
+  $$ServerProfilesTableProcessedTableManager get serverProfileId {
+    final $_column = $_itemColumn<String>('server_profile_id')!;
+
+    final manager = $$ServerProfilesTableTableManager(
+      $_db,
+      $_db.serverProfiles,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_serverProfileIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SelectedModelsTableFilterComposer
+    extends Composer<_$AppDatabase, $SelectedModelsTable> {
+  $$SelectedModelsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get modelId => $composableBuilder(
+    column: $table.modelId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ServerProfilesTableFilterComposer get serverProfileId {
+    final $$ServerProfilesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverProfileId,
+      referencedTable: $db.serverProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ServerProfilesTableFilterComposer(
+            $db: $db,
+            $table: $db.serverProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SelectedModelsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SelectedModelsTable> {
+  $$SelectedModelsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get modelId => $composableBuilder(
+    column: $table.modelId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ServerProfilesTableOrderingComposer get serverProfileId {
+    final $$ServerProfilesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverProfileId,
+      referencedTable: $db.serverProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ServerProfilesTableOrderingComposer(
+            $db: $db,
+            $table: $db.serverProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SelectedModelsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SelectedModelsTable> {
+  $$SelectedModelsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get modelId =>
+      $composableBuilder(column: $table.modelId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$ServerProfilesTableAnnotationComposer get serverProfileId {
+    final $$ServerProfilesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.serverProfileId,
+      referencedTable: $db.serverProfiles,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ServerProfilesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.serverProfiles,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SelectedModelsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SelectedModelsTable,
+          SelectedModel,
+          $$SelectedModelsTableFilterComposer,
+          $$SelectedModelsTableOrderingComposer,
+          $$SelectedModelsTableAnnotationComposer,
+          $$SelectedModelsTableCreateCompanionBuilder,
+          $$SelectedModelsTableUpdateCompanionBuilder,
+          (SelectedModel, $$SelectedModelsTableReferences),
+          SelectedModel,
+          PrefetchHooks Function({bool serverProfileId})
+        > {
+  $$SelectedModelsTableTableManager(
+    _$AppDatabase db,
+    $SelectedModelsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SelectedModelsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SelectedModelsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SelectedModelsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> serverProfileId = const Value.absent(),
+                Value<String> modelId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SelectedModelsCompanion(
+                serverProfileId: serverProfileId,
+                modelId: modelId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String serverProfileId,
+                required String modelId,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SelectedModelsCompanion.insert(
+                serverProfileId: serverProfileId,
+                modelId: modelId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SelectedModelsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({serverProfileId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (serverProfileId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.serverProfileId,
+                                referencedTable: $$SelectedModelsTableReferences
+                                    ._serverProfileIdTable(db),
+                                referencedColumn:
+                                    $$SelectedModelsTableReferences
+                                        ._serverProfileIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SelectedModelsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SelectedModelsTable,
+      SelectedModel,
+      $$SelectedModelsTableFilterComposer,
+      $$SelectedModelsTableOrderingComposer,
+      $$SelectedModelsTableAnnotationComposer,
+      $$SelectedModelsTableCreateCompanionBuilder,
+      $$SelectedModelsTableUpdateCompanionBuilder,
+      (SelectedModel, $$SelectedModelsTableReferences),
+      SelectedModel,
+      PrefetchHooks Function({bool serverProfileId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1595,4 +2280,6 @@ class $AppDatabaseManager {
       $$ServerProfilesTableTableManager(_db, _db.serverProfiles);
   $$AppSettingsTableTableManager get appSettings =>
       $$AppSettingsTableTableManager(_db, _db.appSettings);
+  $$SelectedModelsTableTableManager get selectedModels =>
+      $$SelectedModelsTableTableManager(_db, _db.selectedModels);
 }

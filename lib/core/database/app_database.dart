@@ -36,7 +36,17 @@ class AppSettings extends Table {
   Set<Column<Object>> get primaryKey => {key};
 }
 
-@DriftDatabase(tables: [ServerProfiles, AppSettings])
+class SelectedModels extends Table {
+  TextColumn get serverProfileId =>
+      text().references(ServerProfiles, #id, onDelete: KeyAction.cascade)();
+  TextColumn get modelId => text()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column<Object>> get primaryKey => {serverProfileId};
+}
+
+@DriftDatabase(tables: [ServerProfiles, AppSettings, SelectedModels])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
@@ -44,6 +54,13 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON');
+    },
+  );
 
   Future<String?> readSetting(String key) async {
     final setting = await (select(
