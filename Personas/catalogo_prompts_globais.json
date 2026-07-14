@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Prompt Global de Formatação para Role-play",
+    "slug": "prompt_global_formatacao_roleplay",
+    "file": "00_PROMPT_GLOBAL_FORMATACAO_ROLEPLAY.md",
+    "purpose": "Camada comum de formatação literária para fala, ação, pensamento narrativo superficial, ritmo, Markdown e consistência de cena.",
+    "priority_rule": "O prompt individual da personagem e sua fidelidade narrativa prevalecem em caso de conflito.",
+    "package_version": "v4"
+  }
+]
