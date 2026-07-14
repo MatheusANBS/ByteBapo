@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -23,6 +25,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
   Widget build(BuildContext context) {
     final catalog = ref.watch(modelCatalogProvider);
     final activeServer = ref.watch(activeServerProvider).value;
+    final servers = ref.watch(serverProfilesProvider).value ?? const [];
     final selectedModel = ref.watch(selectedModelProvider).value;
     return Scaffold(
       appBar: AppBar(
@@ -36,33 +39,37 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
           IconButton(
             tooltip: 'Configurações',
             onPressed: () => context.push('/settings'),
-            icon: const Icon(Icons.more_vert),
+            icon: const Icon(Icons.settings_outlined),
           ),
         ],
       ),
-      body: catalog.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => _EmptyModels(
-          message: 'Não consegui carregar o catálogo de modelos.',
-          actionLabel: 'Tentar novamente',
-          onAction: () => ref.invalidate(modelCatalogProvider),
-        ),
-        data: (result) => _CatalogBody(
-          result: result,
-          activeServer: activeServer,
-          selectedModel: selectedModel,
-          query: _query,
-          provider: _provider,
-          page: _page,
-          onQueryChanged: (value) => setState(() {
-            _query = value;
-            _page = 1;
-          }),
-          onProviderChanged: (value) => setState(() {
-            _provider = value;
-            _page = 1;
-          }),
-          onPageChanged: (value) => setState(() => _page = value),
+      body: SafeArea(
+        top: false,
+        child: catalog.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => _EmptyModels(
+            message: 'Não consegui carregar o catálogo de modelos.',
+            actionLabel: 'Tentar novamente',
+            onAction: () => ref.invalidate(modelCatalogProvider),
+          ),
+          data: (result) => _CatalogBody(
+            result: result,
+            servers: servers,
+            activeServer: activeServer,
+            selectedModel: selectedModel,
+            query: _query,
+            provider: _provider,
+            page: _page,
+            onQueryChanged: (value) => setState(() {
+              _query = value;
+              _page = 1;
+            }),
+            onProviderChanged: (value) => setState(() {
+              _provider = value;
+              _page = 1;
+            }),
+            onPageChanged: (value) => setState(() => _page = value),
+          ),
         ),
       ),
     );
@@ -72,6 +79,7 @@ class _ModelsScreenState extends ConsumerState<ModelsScreen> {
 class _CatalogBody extends ConsumerWidget {
   const _CatalogBody({
     required this.result,
+    required this.servers,
     required this.activeServer,
     required this.selectedModel,
     required this.query,
@@ -83,6 +91,7 @@ class _CatalogBody extends ConsumerWidget {
   });
 
   final ModelCatalogResult result;
+  final List<ServerProfile> servers;
   final ServerProfile? activeServer;
   final String? selectedModel;
   final String query;
@@ -142,20 +151,31 @@ class _CatalogBody extends ConsumerWidget {
           child: modelPage.items.isEmpty
               ? const Center(child: Text('Nenhum modelo encontrado.'))
               : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                   itemCount: modelPage.items.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 7),
-                  itemBuilder: (context, index) => _ModelTile(
-                    model: modelPage.items[index],
-                    selected:
-                        activeServer?.id == modelPage.items[index].serverId &&
-                        selectedModel == modelPage.items[index].id,
-                  ),
+                  itemBuilder: (context, index) {
+                    final model = modelPage.items[index];
+                    return _ModelTile(
+                      model: model,
+                      server: _serverForModel(model),
+                      selected:
+                          activeServer?.id == model.serverId &&
+                          selectedModel == model.id,
+                    );
+                  },
                 ),
         ),
         _Pagination(page: modelPage, onPageChanged: onPageChanged),
       ],
     );
+  }
+
+  ServerProfile? _serverForModel(AvailableModel model) {
+    for (final server in servers) {
+      if (server.id == model.serverId) return server;
+    }
+    return null;
   }
 }
 
@@ -201,8 +221,13 @@ class _ProviderFilter extends StatelessWidget {
 }
 
 class _ModelTile extends ConsumerWidget {
-  const _ModelTile({required this.model, required this.selected});
+  const _ModelTile({
+    required this.model,
+    required this.server,
+    required this.selected,
+  });
   final AvailableModel model;
+  final ServerProfile? server;
   final bool selected;
 
   @override
@@ -231,7 +256,7 @@ class _ModelTile extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         child: Row(
           children: [
-            _ProviderMark(provider: model.provider),
+            _ProviderMark(provider: model.provider, server: server),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -243,7 +268,10 @@ class _ModelTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    model.provider == ApiProvider.nvidia ? 'NVIDIA' : 'Ollama',
+                    server?.name ??
+                        (model.provider == ApiProvider.nvidia
+                            ? 'NVIDIA'
+                            : 'Ollama'),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -273,28 +301,39 @@ class _ModelTile extends ConsumerWidget {
 }
 
 class _ProviderMark extends StatelessWidget {
-  const _ProviderMark({required this.provider});
+  const _ProviderMark({required this.provider, required this.server});
   final ApiProvider provider;
+  final ServerProfile? server;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: 38,
-    height: 38,
-    decoration: BoxDecoration(
-      color: provider == ApiProvider.nvidia
-          ? Colors.lightGreenAccent.shade400.withValues(alpha: 0.15)
-          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(7),
-    ),
-    child: Icon(
-      provider == ApiProvider.nvidia
-          ? Icons.cloud_outlined
-          : Icons.all_inclusive,
-      color: provider == ApiProvider.nvidia
-          ? Colors.lightGreenAccent.shade400
-          : Theme.of(context).colorScheme.primary,
-    ),
-  );
+  Widget build(BuildContext context) {
+    final avatarPath = server?.avatarPath;
+    final hasAvatar = avatarPath != null && File(avatarPath).existsSync();
+    if (hasAvatar) {
+      return CircleAvatar(
+        radius: 19,
+        backgroundImage: FileImage(File(avatarPath)),
+      );
+    }
+    return Container(
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: provider == ApiProvider.nvidia
+            ? Colors.lightGreenAccent.shade400.withValues(alpha: 0.15)
+            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(7),
+      ),
+      child: Icon(
+        provider == ApiProvider.nvidia
+            ? Icons.cloud_outlined
+            : Icons.all_inclusive,
+        color: provider == ApiProvider.nvidia
+            ? Colors.lightGreenAccent.shade400
+            : Theme.of(context).colorScheme.primary,
+      ),
+    );
+  }
 }
 
 class _Pagination extends StatelessWidget {
@@ -304,7 +343,7 @@ class _Pagination extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+    padding: const EdgeInsets.fromLTRB(20, 8, 20, 18),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -320,7 +359,7 @@ class _Pagination extends StatelessWidget {
           children: [
             Text('Página ${page.page} de ${page.pageCount}'),
             const SizedBox(height: 3),
-            Text('${page.start}–${page.end} de ${page.total}'),
+            Text('${page.start}-${page.end} de ${page.total}'),
           ],
         ),
         OutlinedButton.icon(

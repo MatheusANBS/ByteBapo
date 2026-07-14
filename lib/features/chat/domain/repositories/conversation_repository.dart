@@ -18,5 +18,7 @@ abstract class ConversationRepository {
 
   Future<void> saveMessage(ChatMessage message);
 
+  Future<void> removeMessage(String messageId);
+
   Future<void> removeMessages(String conversationId);
 }

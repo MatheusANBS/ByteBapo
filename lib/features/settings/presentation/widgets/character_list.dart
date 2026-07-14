@@ -73,26 +73,39 @@ class _CharacterListState extends State<CharacterList> {
           ),
         ),
         const SizedBox(height: 8),
-        for (final character in filteredCharacters)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 1),
-            child: _CharacterRow(
-              character: character,
-              isActive: character.id == widget.activeCharacter?.id,
-              onSelect: () => widget.onSelect(character.id),
-              onEdit: () => widget.onEdit(character),
-              onDelete: () => _confirmDelete(character),
-            ),
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              for (final character in filteredCharacters)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 1),
+                  child: _CharacterRow(
+                    character: character,
+                    isActive: character.id == widget.activeCharacter?.id,
+                    onSelect: () => widget.onSelect(character.id),
+                    onEdit: () => widget.onEdit(character),
+                    onDelete: () => _confirmDelete(character),
+                  ),
+                ),
+              const SizedBox(height: 8),
+            ],
           ),
-        const SizedBox(height: 16),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: widget.onCreate,
-            icon: const Icon(Icons.add),
-            label: const Text('Adicionar personagem'),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
+        ),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: widget.onCreate,
+                icon: const Icon(Icons.add),
+                label: const Text('Adicionar personagem'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(56),
+                ),
+              ),
             ),
           ),
         ),

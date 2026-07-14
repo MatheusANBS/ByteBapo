@@ -108,6 +108,9 @@ class _HistoryRepository implements ConversationRepository {
 
   @override
   Future<void> saveMessage(ChatMessage message) async {}
+
+  @override
+  Future<void> removeMessage(String messageId) async {}
 }
 
 Conversation _conversation(String id, String title) => Conversation(

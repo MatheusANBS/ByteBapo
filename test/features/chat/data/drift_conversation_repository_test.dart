@@ -213,6 +213,24 @@ void main() {
       'second-message',
     );
   });
+
+  test('removes only the requested message', () async {
+    final conversation = _conversation();
+    await repository.saveConversation(conversation);
+    await repository.saveMessage(_message(id: 'first-message'));
+    await repository.saveMessage(
+      _message(id: 'second-message', createdAt: DateTime.utc(2026, 1, 2)),
+    );
+
+    await repository.removeMessage('first-message');
+
+    expect(
+      (await repository.listMessages(
+        conversation.id,
+      )).map((message) => message.id),
+      ['second-message'],
+    );
+  });
 }
 
 Conversation _conversation({

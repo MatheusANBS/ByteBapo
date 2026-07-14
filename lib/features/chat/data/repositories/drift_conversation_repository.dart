@@ -96,10 +96,22 @@ class DriftConversationRepository implements ConversationRepository {
               ConversationMapper.encodeToolCalls(message.toolCalls),
             ),
             toolCallId: Value(message.toolCallId),
+            characterIdSnapshot: Value(message.characterIdSnapshot),
+            characterNameSnapshot: Value(message.characterNameSnapshot),
+            characterAvatarPathSnapshot: Value(
+              message.characterAvatarPathSnapshot,
+            ),
             createdAt: Value(message.createdAt),
             updatedAt: Value(message.updatedAt),
           ),
         );
+  }
+
+  @override
+  Future<void> removeMessage(String messageId) async {
+    await (database.delete(
+      database.chatMessages,
+    )..where((row) => row.id.equals(messageId))).go();
   }
 
   @override

@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
 
 void main() {
   testWidgets('tapping a model persists it and opens chat', (tester) async {
@@ -83,6 +84,126 @@ void main() {
     expect(
       await database.readSetting(AppSettingKey.activeServerId),
       'server-1',
+    );
+  });
+
+  testWidgets('shows the configured provider photo for model rows', (
+    tester,
+  ) async {
+    final avatar = File(
+      '${Directory.systemTemp.path}/bytepapo-model-avatar-test.png',
+    );
+    addTearDown(() {
+      if (avatar.existsSync()) avatar.deleteSync();
+    });
+    avatar.writeAsBytesSync(const [
+      0x89,
+      0x50,
+      0x4E,
+      0x47,
+      0x0D,
+      0x0A,
+      0x1A,
+      0x0A,
+      0x00,
+      0x00,
+      0x00,
+      0x0D,
+      0x49,
+      0x48,
+      0x44,
+      0x52,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x00,
+      0x01,
+      0x08,
+      0x06,
+      0x00,
+      0x00,
+      0x00,
+      0x1F,
+      0x15,
+      0xC4,
+      0x89,
+      0x00,
+      0x00,
+      0x00,
+      0x0A,
+      0x49,
+      0x44,
+      0x41,
+      0x54,
+      0x78,
+      0x9C,
+      0x63,
+      0x00,
+      0x01,
+      0x00,
+      0x00,
+      0x05,
+      0x00,
+      0x01,
+      0x0D,
+      0x0A,
+      0x2D,
+      0xB4,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x49,
+      0x45,
+      0x4E,
+      0x44,
+      0xAE,
+      0x42,
+      0x60,
+      0x82,
+    ]);
+    final server = ServerProfile.create(
+      id: 'server-photo',
+      name: 'Servidor com foto',
+      input: 'http://192.168.0.2:11434',
+      avatarPath: avatar.path,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          modelCatalogProvider.overrideWithValue(
+            const AsyncValue.data(
+              ModelCatalogResult(
+                models: [
+                  AvailableModel(
+                    id: 'qwen3:latest',
+                    displayName: 'Qwen 3',
+                    serverId: 'server-photo',
+                    provider: ApiProvider.ollama,
+                  ),
+                ],
+                failures: [],
+              ),
+            ),
+          ),
+          serverProfilesProvider.overrideWithValue(AsyncValue.data([server])),
+          activeServerProvider.overrideWithValue(AsyncValue.data(server)),
+          selectedModelProvider.overrideWithValue(const AsyncValue.data(null)),
+        ],
+        child: const MaterialApp(home: ModelsScreen()),
+      ),
+    );
+
+    expect(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is CircleAvatar && widget.backgroundImage is FileImage,
+      ),
+      findsOneWidget,
     );
   });
 }

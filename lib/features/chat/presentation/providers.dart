@@ -89,8 +89,6 @@ final chatControllerProvider = Provider.autoDispose
     .family<ChatController?, String?>((ref, conversationId) {
       final server = ref.watch(activeServerProvider).value;
       final model = ref.watch(selectedModelProvider).value;
-      final character = ref.watch(activeCharacterProvider).value;
-      final instructions = ref.watch(globalInstructionsProvider).value;
       if (server == null || model == null) return null;
       final controller = ChatController(
         chatGateway: ref
@@ -100,9 +98,10 @@ final chatControllerProvider = Provider.autoDispose
         conversationRepository: ref.watch(conversationRepositoryProvider),
         server: server,
         model: model,
-        character: character,
-        globalInstructions: instructions,
-        onConversationChanged: () => ref.invalidate(conversationsProvider),
+        onConversationChanged: () {
+          ref.invalidate(conversationsProvider);
+          ref.invalidate(conversationHistoryPageProvider);
+        },
       );
       controller.load(conversationId);
       ref.onDispose(controller.dispose);

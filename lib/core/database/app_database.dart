@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.defaults() : super(driftDatabase(name: 'bytepapo'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,6 +42,20 @@ class AppDatabase extends _$AppDatabase {
       if (from < 4) {
         await migrator.createTable(conversations);
         await migrator.createTable(chatMessages);
+      }
+      if (from >= 4 && from < 5) {
+        await migrator.addColumn(
+          chatMessages,
+          chatMessages.characterIdSnapshot,
+        );
+        await migrator.addColumn(
+          chatMessages,
+          chatMessages.characterNameSnapshot,
+        );
+        await migrator.addColumn(
+          chatMessages,
+          chatMessages.characterAvatarPathSnapshot,
+        );
       }
     },
     beforeOpen: (details) async {

@@ -13,17 +13,19 @@ class ChatMessageList extends StatelessWidget {
     required this.controller,
     required this.messages,
     required this.character,
+    this.onDeleteMessage,
   });
 
   final ScrollController controller;
   final List<ChatMessage> messages;
   final ChatCharacter? character;
+  final ValueChanged<ChatMessage>? onDeleteMessage;
 
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
       controller: controller,
-      padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 72),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
@@ -32,14 +34,34 @@ class ChatMessageList extends StatelessWidget {
             !messages
                 .take(index)
                 .any((item) => item.role == ChatRole.assistant);
+        final messageCharacter = _characterForMessage(message) ?? character;
         return _ChatBubble(
           message: message,
-          character: character,
+          character: messageCharacter,
           showColdStartLoader: showColdStartLoader,
+          onDelete: onDeleteMessage == null
+              ? null
+              : () => onDeleteMessage!(message),
         );
       },
     );
   }
+}
+
+ChatCharacter? _characterForMessage(ChatMessage message) {
+  if (message.role != ChatRole.assistant ||
+      message.characterNameSnapshot == null) {
+    return null;
+  }
+  final now = DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+  return ChatCharacter(
+    id: message.characterIdSnapshot ?? 'message-character-${message.id}',
+    name: message.characterNameSnapshot!,
+    instructions: '',
+    imagePath: message.characterAvatarPathSnapshot,
+    createdAt: now,
+    updatedAt: now,
+  );
 }
 
 class _ChatBubble extends StatelessWidget {
@@ -47,10 +69,12 @@ class _ChatBubble extends StatelessWidget {
     required this.message,
     required this.character,
     required this.showColdStartLoader,
+    required this.onDelete,
   });
   final ChatMessage message;
   final ChatCharacter? character;
   final bool showColdStartLoader;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -126,6 +150,17 @@ class _ChatBubble extends StatelessWidget {
                                 ClipboardData(text: message.content),
                               ),
                         icon: const Icon(Icons.copy, size: 18),
+                      ),
+                      IconButton(
+                        tooltip: 'Excluir mensagem',
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 30,
+                          height: 30,
+                        ),
+                        onPressed: message.isStreaming ? null : onDelete,
+                        icon: const Icon(Icons.delete_outline, size: 18),
                       ),
                     ],
                   ),

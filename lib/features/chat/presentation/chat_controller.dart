@@ -19,8 +19,6 @@ class ChatController extends ChangeNotifier {
     required this.conversationRepository,
     required this.server,
     required this.model,
-    this.character,
-    this.globalInstructions,
     this.onConversationChanged,
   });
 
@@ -28,8 +26,6 @@ class ChatController extends ChangeNotifier {
   final ConversationRepository conversationRepository;
   final ServerProfile server;
   final String model;
-  final ChatCharacter? character;
-  final String? globalInstructions;
   final VoidCallback? onConversationChanged;
   final _uuid = const Uuid();
 
@@ -60,6 +56,8 @@ class ChatController extends ChangeNotifier {
   Future<void> send(
     String content, {
     ThinkingMode thinking = ThinkingMode.modelDefault,
+    ChatCharacter? character,
+    String? globalInstructions,
   }) async {
     final text = content.trim();
     if (text.isEmpty || isStreaming) {
@@ -68,6 +66,10 @@ class ChatController extends ChangeNotifier {
     errorMessage = null;
     final now = DateTime.now().toUtc();
     final conversationId = conversation?.id ?? _uuid.v4();
+    final systemPrompt = composeSystemPrompt(
+      globalInstructions: globalInstructions,
+      characterInstructions: character?.instructions,
+    );
     conversation ??= Conversation(
       id: conversationId,
       title: _titleFrom(text),
@@ -77,11 +79,14 @@ class ChatController extends ChangeNotifier {
       model: model,
       characterId: character?.id,
       characterNameSnapshot: character?.name,
-      systemPrompt: composeSystemPrompt(
-        globalInstructions: globalInstructions,
-        characterInstructions: character?.instructions,
-      ),
+      systemPrompt: systemPrompt,
       createdAt: now,
+      updatedAt: now,
+    );
+    conversation = _withCurrentContext(
+      conversation!,
+      character: character,
+      systemPrompt: systemPrompt,
       updatedAt: now,
     );
 
@@ -103,6 +108,9 @@ class ChatController extends ChangeNotifier {
       content: '',
       model: model,
       status: ChatMessageStatus.streaming,
+      characterIdSnapshot: character?.id,
+      characterNameSnapshot: character?.name,
+      characterAvatarPathSnapshot: character?.imagePath,
       createdAt: assistantStartedAt,
       updatedAt: assistantStartedAt,
     );
@@ -226,6 +234,9 @@ class ChatController extends ChangeNotifier {
         thinking: current.thinking,
         model: current.model,
         status: ChatMessageStatus.cancelled,
+        characterIdSnapshot: current.characterIdSnapshot,
+        characterNameSnapshot: current.characterNameSnapshot,
+        characterAvatarPathSnapshot: current.characterAvatarPathSnapshot,
         createdAt: current.createdAt,
         updatedAt: DateTime.now().toUtc(),
       );
@@ -249,6 +260,50 @@ class ChatController extends ChangeNotifier {
     notifyListeners();
   }
 
+  void clearError() {
+    errorMessage = null;
+    notifyListeners();
+  }
+
+  Future<void> removeMessage(ChatMessage message) async {
+    await conversationRepository.removeMessage(message.id);
+    messages = [
+      for (final item in messages)
+        if (item.id != message.id) item,
+    ];
+    onConversationChanged?.call();
+    notifyListeners();
+  }
+
+  void startNew() {
+    conversation = null;
+    messages = const [];
+    errorMessage = null;
+    notifyListeners();
+  }
+
+  Conversation _withCurrentContext(
+    Conversation current, {
+    required ChatCharacter? character,
+    required String? systemPrompt,
+    required DateTime updatedAt,
+  }) {
+    return Conversation(
+      id: current.id,
+      title: current.title,
+      serverProfileId: current.serverProfileId,
+      serverNameSnapshot: current.serverNameSnapshot,
+      providerSnapshot: current.providerSnapshot,
+      model: current.model,
+      characterId: character?.id,
+      characterNameSnapshot: character?.name,
+      systemPrompt: systemPrompt,
+      createdAt: current.createdAt,
+      updatedAt: updatedAt,
+      archivedAt: current.archivedAt,
+    );
+  }
+
   ChatMessage _replaceAssistant(
     ChatMessage previous, {
     required String content,
@@ -265,6 +320,9 @@ class ChatController extends ChangeNotifier {
       model: previous.model,
       status: status,
       toolCalls: toolCalls ?? previous.toolCalls,
+      characterIdSnapshot: previous.characterIdSnapshot,
+      characterNameSnapshot: previous.characterNameSnapshot,
+      characterAvatarPathSnapshot: previous.characterAvatarPathSnapshot,
       createdAt: previous.createdAt,
       updatedAt: DateTime.now().toUtc(),
     );

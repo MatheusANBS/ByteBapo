@@ -33,6 +33,50 @@ void main() {
     expect(find.text('Luna'), findsOneWidget);
   });
 
+  testWidgets('scrolls when there are many characters on small screens', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final characters = [
+      for (var index = 0; index < 18; index++)
+        ChatCharacter.create(
+          id: 'char-$index',
+          name: 'Personagem $index',
+          instructions: 'Instrucoes do personagem $index.',
+        ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: CharacterManagementScreen(
+          characters: characters,
+          activeCharacter: characters.first,
+          onSelect: (_) async {},
+          onEdit: (_) {},
+          onDelete: (_) {},
+          onCreate: () {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Personagem 0'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.dragUntilVisible(
+      find.text('Personagem 17'),
+      find.byType(ListView),
+      const Offset(0, -400),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Personagem 17'), findsOneWidget);
+  });
+
   testWidgets('selects a character through its callback', (tester) async {
     String? selectedId;
     final character = ChatCharacter.create(

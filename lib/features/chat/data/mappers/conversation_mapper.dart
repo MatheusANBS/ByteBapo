@@ -33,6 +33,9 @@ abstract final class ConversationMapper {
       status: domain.ChatMessageStatus.fromName(row.status),
       toolCalls: decodeToolCalls(row.toolCallsJson),
       toolCallId: row.toolCallId,
+      characterIdSnapshot: row.characterIdSnapshot,
+      characterNameSnapshot: row.characterNameSnapshot,
+      characterAvatarPathSnapshot: row.characterAvatarPathSnapshot,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     );

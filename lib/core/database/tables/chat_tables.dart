@@ -56,6 +56,9 @@ class ChatMessages extends Table {
   TextColumn get status => text()();
   TextColumn get toolCallsJson => text().nullable()();
   TextColumn get toolCallId => text().nullable()();
+  TextColumn get characterIdSnapshot => text().nullable()();
+  TextColumn get characterNameSnapshot => text().nullable()();
+  TextColumn get characterAvatarPathSnapshot => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

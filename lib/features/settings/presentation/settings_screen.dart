@@ -18,17 +18,7 @@ class SettingsScreen extends ConsumerWidget {
     final instructions = ref.watch(globalInstructionsProvider).value ?? '';
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          tooltip: 'Voltar',
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              context.go('/chat');
-            }
-          },
-          icon: const Icon(Icons.arrow_back),
-        ),
+        leading: BackButton(onPressed: () => _closeSettings(context)),
         title: const Text('Configurações'),
       ),
       body: ListView(
@@ -38,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           _PromptCard(
             prompt: instructions,
-            onEdit: () => _editGlobalPrompt(context, ref, instructions),
+            onEdit: () => _editGlobalPrompt(context, instructions),
           ),
           const SizedBox(height: 18),
           Text('Personagens', style: Theme.of(context).textTheme.titleMedium),
@@ -80,40 +70,76 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _editGlobalPrompt(
     BuildContext context,
-    WidgetRef ref,
     String instructions,
   ) async {
-    final controller = TextEditingController(text: instructions);
     await showDialog<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Prompt global'),
-        content: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
-            child: GlobalPromptEditor(
-              controller: controller,
-              onSave: (value) async {
-                await ref
-                    .read(instructionsRepositoryProvider)
-                    .saveGlobalInstructions(value);
-                ref.invalidate(globalInstructionsProvider);
-                if (dialogContext.mounted) Navigator.of(dialogContext).pop();
-              },
-              onClear: () async {
-                controller.clear();
-                await ref
-                    .read(instructionsRepositoryProvider)
-                    .saveGlobalInstructions(null);
-                ref.invalidate(globalInstructionsProvider);
-                if (dialogContext.mounted) Navigator.of(dialogContext).pop();
-              },
-            ),
+      builder: (_) => _GlobalPromptDialog(initialInstructions: instructions),
+    );
+  }
+}
+
+void _closeSettings(BuildContext context) {
+  if (Navigator.of(context).canPop()) {
+    Navigator.of(context).pop();
+    return;
+  }
+  context.go('/chat');
+}
+
+class _GlobalPromptDialog extends ConsumerStatefulWidget {
+  const _GlobalPromptDialog({required this.initialInstructions});
+
+  final String initialInstructions;
+
+  @override
+  ConsumerState<_GlobalPromptDialog> createState() =>
+      _GlobalPromptDialogState();
+}
+
+class _GlobalPromptDialogState extends ConsumerState<_GlobalPromptDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialInstructions);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Prompt global'),
+      content: SingleChildScrollView(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: GlobalPromptEditor(
+            controller: _controller,
+            onSave: (value) async {
+              await ref
+                  .read(instructionsRepositoryProvider)
+                  .saveGlobalInstructions(value);
+              ref.invalidate(globalInstructionsProvider);
+              if (context.mounted) Navigator.of(context).pop();
+            },
+            onClear: () async {
+              _controller.clear();
+              await ref
+                  .read(instructionsRepositoryProvider)
+                  .saveGlobalInstructions(null);
+              ref.invalidate(globalInstructionsProvider);
+              if (context.mounted) Navigator.of(context).pop();
+            },
           ),
         ),
       ),
     );
-    controller.dispose();
   }
 }
 

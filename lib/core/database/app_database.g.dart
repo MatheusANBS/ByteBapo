@@ -2607,6 +2607,39 @@ class $ChatMessagesTable extends ChatMessages
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _characterIdSnapshotMeta =
+      const VerificationMeta('characterIdSnapshot');
+  @override
+  late final GeneratedColumn<String> characterIdSnapshot =
+      GeneratedColumn<String>(
+        'character_id_snapshot',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _characterNameSnapshotMeta =
+      const VerificationMeta('characterNameSnapshot');
+  @override
+  late final GeneratedColumn<String> characterNameSnapshot =
+      GeneratedColumn<String>(
+        'character_name_snapshot',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _characterAvatarPathSnapshotMeta =
+      const VerificationMeta('characterAvatarPathSnapshot');
+  @override
+  late final GeneratedColumn<String> characterAvatarPathSnapshot =
+      GeneratedColumn<String>(
+        'character_avatar_path_snapshot',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -2640,6 +2673,9 @@ class $ChatMessagesTable extends ChatMessages
     status,
     toolCallsJson,
     toolCallId,
+    characterIdSnapshot,
+    characterNameSnapshot,
+    characterAvatarPathSnapshot,
     createdAt,
     updatedAt,
   ];
@@ -2727,6 +2763,33 @@ class $ChatMessagesTable extends ChatMessages
         ),
       );
     }
+    if (data.containsKey('character_id_snapshot')) {
+      context.handle(
+        _characterIdSnapshotMeta,
+        characterIdSnapshot.isAcceptableOrUnknown(
+          data['character_id_snapshot']!,
+          _characterIdSnapshotMeta,
+        ),
+      );
+    }
+    if (data.containsKey('character_name_snapshot')) {
+      context.handle(
+        _characterNameSnapshotMeta,
+        characterNameSnapshot.isAcceptableOrUnknown(
+          data['character_name_snapshot']!,
+          _characterNameSnapshotMeta,
+        ),
+      );
+    }
+    if (data.containsKey('character_avatar_path_snapshot')) {
+      context.handle(
+        _characterAvatarPathSnapshotMeta,
+        characterAvatarPathSnapshot.isAcceptableOrUnknown(
+          data['character_avatar_path_snapshot']!,
+          _characterAvatarPathSnapshotMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -2788,6 +2851,18 @@ class $ChatMessagesTable extends ChatMessages
         DriftSqlType.string,
         data['${effectivePrefix}tool_call_id'],
       ),
+      characterIdSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}character_id_snapshot'],
+      ),
+      characterNameSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}character_name_snapshot'],
+      ),
+      characterAvatarPathSnapshot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}character_avatar_path_snapshot'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -2815,6 +2890,9 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
   final String status;
   final String? toolCallsJson;
   final String? toolCallId;
+  final String? characterIdSnapshot;
+  final String? characterNameSnapshot;
+  final String? characterAvatarPathSnapshot;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ChatMessage({
@@ -2827,6 +2905,9 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
     required this.status,
     this.toolCallsJson,
     this.toolCallId,
+    this.characterIdSnapshot,
+    this.characterNameSnapshot,
+    this.characterAvatarPathSnapshot,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -2847,6 +2928,17 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
     }
     if (!nullToAbsent || toolCallId != null) {
       map['tool_call_id'] = Variable<String>(toolCallId);
+    }
+    if (!nullToAbsent || characterIdSnapshot != null) {
+      map['character_id_snapshot'] = Variable<String>(characterIdSnapshot);
+    }
+    if (!nullToAbsent || characterNameSnapshot != null) {
+      map['character_name_snapshot'] = Variable<String>(characterNameSnapshot);
+    }
+    if (!nullToAbsent || characterAvatarPathSnapshot != null) {
+      map['character_avatar_path_snapshot'] = Variable<String>(
+        characterAvatarPathSnapshot,
+      );
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -2870,6 +2962,16 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
       toolCallId: toolCallId == null && nullToAbsent
           ? const Value.absent()
           : Value(toolCallId),
+      characterIdSnapshot: characterIdSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(characterIdSnapshot),
+      characterNameSnapshot: characterNameSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(characterNameSnapshot),
+      characterAvatarPathSnapshot:
+          characterAvatarPathSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(characterAvatarPathSnapshot),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -2890,6 +2992,15 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
       status: serializer.fromJson<String>(json['status']),
       toolCallsJson: serializer.fromJson<String?>(json['toolCallsJson']),
       toolCallId: serializer.fromJson<String?>(json['toolCallId']),
+      characterIdSnapshot: serializer.fromJson<String?>(
+        json['characterIdSnapshot'],
+      ),
+      characterNameSnapshot: serializer.fromJson<String?>(
+        json['characterNameSnapshot'],
+      ),
+      characterAvatarPathSnapshot: serializer.fromJson<String?>(
+        json['characterAvatarPathSnapshot'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -2907,6 +3018,13 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
       'status': serializer.toJson<String>(status),
       'toolCallsJson': serializer.toJson<String?>(toolCallsJson),
       'toolCallId': serializer.toJson<String?>(toolCallId),
+      'characterIdSnapshot': serializer.toJson<String?>(characterIdSnapshot),
+      'characterNameSnapshot': serializer.toJson<String?>(
+        characterNameSnapshot,
+      ),
+      'characterAvatarPathSnapshot': serializer.toJson<String?>(
+        characterAvatarPathSnapshot,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -2922,6 +3040,9 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
     String? status,
     Value<String?> toolCallsJson = const Value.absent(),
     Value<String?> toolCallId = const Value.absent(),
+    Value<String?> characterIdSnapshot = const Value.absent(),
+    Value<String?> characterNameSnapshot = const Value.absent(),
+    Value<String?> characterAvatarPathSnapshot = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ChatMessage(
@@ -2936,6 +3057,15 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
         ? toolCallsJson.value
         : this.toolCallsJson,
     toolCallId: toolCallId.present ? toolCallId.value : this.toolCallId,
+    characterIdSnapshot: characterIdSnapshot.present
+        ? characterIdSnapshot.value
+        : this.characterIdSnapshot,
+    characterNameSnapshot: characterNameSnapshot.present
+        ? characterNameSnapshot.value
+        : this.characterNameSnapshot,
+    characterAvatarPathSnapshot: characterAvatarPathSnapshot.present
+        ? characterAvatarPathSnapshot.value
+        : this.characterAvatarPathSnapshot,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -2956,6 +3086,15 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
       toolCallId: data.toolCallId.present
           ? data.toolCallId.value
           : this.toolCallId,
+      characterIdSnapshot: data.characterIdSnapshot.present
+          ? data.characterIdSnapshot.value
+          : this.characterIdSnapshot,
+      characterNameSnapshot: data.characterNameSnapshot.present
+          ? data.characterNameSnapshot.value
+          : this.characterNameSnapshot,
+      characterAvatarPathSnapshot: data.characterAvatarPathSnapshot.present
+          ? data.characterAvatarPathSnapshot.value
+          : this.characterAvatarPathSnapshot,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -2973,6 +3112,9 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
           ..write('status: $status, ')
           ..write('toolCallsJson: $toolCallsJson, ')
           ..write('toolCallId: $toolCallId, ')
+          ..write('characterIdSnapshot: $characterIdSnapshot, ')
+          ..write('characterNameSnapshot: $characterNameSnapshot, ')
+          ..write('characterAvatarPathSnapshot: $characterAvatarPathSnapshot, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -2990,6 +3132,9 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
     status,
     toolCallsJson,
     toolCallId,
+    characterIdSnapshot,
+    characterNameSnapshot,
+    characterAvatarPathSnapshot,
     createdAt,
     updatedAt,
   );
@@ -3006,6 +3151,10 @@ class ChatMessage extends DataClass implements Insertable<ChatMessage> {
           other.status == this.status &&
           other.toolCallsJson == this.toolCallsJson &&
           other.toolCallId == this.toolCallId &&
+          other.characterIdSnapshot == this.characterIdSnapshot &&
+          other.characterNameSnapshot == this.characterNameSnapshot &&
+          other.characterAvatarPathSnapshot ==
+              this.characterAvatarPathSnapshot &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3020,6 +3169,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
   final Value<String> status;
   final Value<String?> toolCallsJson;
   final Value<String?> toolCallId;
+  final Value<String?> characterIdSnapshot;
+  final Value<String?> characterNameSnapshot;
+  final Value<String?> characterAvatarPathSnapshot;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -3033,6 +3185,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
     this.status = const Value.absent(),
     this.toolCallsJson = const Value.absent(),
     this.toolCallId = const Value.absent(),
+    this.characterIdSnapshot = const Value.absent(),
+    this.characterNameSnapshot = const Value.absent(),
+    this.characterAvatarPathSnapshot = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3047,6 +3202,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
     required String status,
     this.toolCallsJson = const Value.absent(),
     this.toolCallId = const Value.absent(),
+    this.characterIdSnapshot = const Value.absent(),
+    this.characterNameSnapshot = const Value.absent(),
+    this.characterAvatarPathSnapshot = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -3068,6 +3226,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
     Expression<String>? status,
     Expression<String>? toolCallsJson,
     Expression<String>? toolCallId,
+    Expression<String>? characterIdSnapshot,
+    Expression<String>? characterNameSnapshot,
+    Expression<String>? characterAvatarPathSnapshot,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -3082,6 +3243,12 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
       if (status != null) 'status': status,
       if (toolCallsJson != null) 'tool_calls_json': toolCallsJson,
       if (toolCallId != null) 'tool_call_id': toolCallId,
+      if (characterIdSnapshot != null)
+        'character_id_snapshot': characterIdSnapshot,
+      if (characterNameSnapshot != null)
+        'character_name_snapshot': characterNameSnapshot,
+      if (characterAvatarPathSnapshot != null)
+        'character_avatar_path_snapshot': characterAvatarPathSnapshot,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3098,6 +3265,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
     Value<String>? status,
     Value<String?>? toolCallsJson,
     Value<String?>? toolCallId,
+    Value<String?>? characterIdSnapshot,
+    Value<String?>? characterNameSnapshot,
+    Value<String?>? characterAvatarPathSnapshot,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -3112,6 +3282,11 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
       status: status ?? this.status,
       toolCallsJson: toolCallsJson ?? this.toolCallsJson,
       toolCallId: toolCallId ?? this.toolCallId,
+      characterIdSnapshot: characterIdSnapshot ?? this.characterIdSnapshot,
+      characterNameSnapshot:
+          characterNameSnapshot ?? this.characterNameSnapshot,
+      characterAvatarPathSnapshot:
+          characterAvatarPathSnapshot ?? this.characterAvatarPathSnapshot,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -3148,6 +3323,21 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
     if (toolCallId.present) {
       map['tool_call_id'] = Variable<String>(toolCallId.value);
     }
+    if (characterIdSnapshot.present) {
+      map['character_id_snapshot'] = Variable<String>(
+        characterIdSnapshot.value,
+      );
+    }
+    if (characterNameSnapshot.present) {
+      map['character_name_snapshot'] = Variable<String>(
+        characterNameSnapshot.value,
+      );
+    }
+    if (characterAvatarPathSnapshot.present) {
+      map['character_avatar_path_snapshot'] = Variable<String>(
+        characterAvatarPathSnapshot.value,
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -3172,6 +3362,9 @@ class ChatMessagesCompanion extends UpdateCompanion<ChatMessage> {
           ..write('status: $status, ')
           ..write('toolCallsJson: $toolCallsJson, ')
           ..write('toolCallId: $toolCallId, ')
+          ..write('characterIdSnapshot: $characterIdSnapshot, ')
+          ..write('characterNameSnapshot: $characterNameSnapshot, ')
+          ..write('characterAvatarPathSnapshot: $characterAvatarPathSnapshot, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -5262,6 +5455,9 @@ typedef $$ChatMessagesTableCreateCompanionBuilder =
       required String status,
       Value<String?> toolCallsJson,
       Value<String?> toolCallId,
+      Value<String?> characterIdSnapshot,
+      Value<String?> characterNameSnapshot,
+      Value<String?> characterAvatarPathSnapshot,
       required DateTime createdAt,
       required DateTime updatedAt,
       Value<int> rowid,
@@ -5277,6 +5473,9 @@ typedef $$ChatMessagesTableUpdateCompanionBuilder =
       Value<String> status,
       Value<String?> toolCallsJson,
       Value<String?> toolCallId,
+      Value<String?> characterIdSnapshot,
+      Value<String?> characterNameSnapshot,
+      Value<String?> characterAvatarPathSnapshot,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -5351,6 +5550,21 @@ class $$ChatMessagesTableFilterComposer
 
   ColumnFilters<String> get toolCallId => $composableBuilder(
     column: $table.toolCallId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get characterIdSnapshot => $composableBuilder(
+    column: $table.characterIdSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get characterNameSnapshot => $composableBuilder(
+    column: $table.characterNameSnapshot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get characterAvatarPathSnapshot => $composableBuilder(
+    column: $table.characterAvatarPathSnapshot,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5437,6 +5651,21 @@ class $$ChatMessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get characterIdSnapshot => $composableBuilder(
+    column: $table.characterIdSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get characterNameSnapshot => $composableBuilder(
+    column: $table.characterNameSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get characterAvatarPathSnapshot => $composableBuilder(
+    column: $table.characterAvatarPathSnapshot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -5508,6 +5737,21 @@ class $$ChatMessagesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get characterIdSnapshot => $composableBuilder(
+    column: $table.characterIdSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get characterNameSnapshot => $composableBuilder(
+    column: $table.characterNameSnapshot,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get characterAvatarPathSnapshot => $composableBuilder(
+    column: $table.characterAvatarPathSnapshot,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -5575,6 +5819,10 @@ class $$ChatMessagesTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<String?> toolCallsJson = const Value.absent(),
                 Value<String?> toolCallId = const Value.absent(),
+                Value<String?> characterIdSnapshot = const Value.absent(),
+                Value<String?> characterNameSnapshot = const Value.absent(),
+                Value<String?> characterAvatarPathSnapshot =
+                    const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -5588,6 +5836,9 @@ class $$ChatMessagesTableTableManager
                 status: status,
                 toolCallsJson: toolCallsJson,
                 toolCallId: toolCallId,
+                characterIdSnapshot: characterIdSnapshot,
+                characterNameSnapshot: characterNameSnapshot,
+                characterAvatarPathSnapshot: characterAvatarPathSnapshot,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -5603,6 +5854,10 @@ class $$ChatMessagesTableTableManager
                 required String status,
                 Value<String?> toolCallsJson = const Value.absent(),
                 Value<String?> toolCallId = const Value.absent(),
+                Value<String?> characterIdSnapshot = const Value.absent(),
+                Value<String?> characterNameSnapshot = const Value.absent(),
+                Value<String?> characterAvatarPathSnapshot =
+                    const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -5616,6 +5871,9 @@ class $$ChatMessagesTableTableManager
                 status: status,
                 toolCallsJson: toolCallsJson,
                 toolCallId: toolCallId,
+                characterIdSnapshot: characterIdSnapshot,
+                characterNameSnapshot: characterNameSnapshot,
+                characterAvatarPathSnapshot: characterAvatarPathSnapshot,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

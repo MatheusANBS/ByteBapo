@@ -1,7 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:byte_papo/core/database/app_database.dart'
-    hide ChatMessage, Conversation, ServerProfile;
+    hide ChatCharacter, ChatMessage, Conversation, ServerProfile;
 import 'package:byte_papo/features/chat/data/repositories/drift_conversation_repository.dart';
+import 'package:byte_papo/features/chat/domain/entities/chat_character.dart';
 import 'package:byte_papo/features/chat/domain/entities/chat_message.dart';
 import 'package:byte_papo/features/chat/domain/entities/generation_options.dart';
 import 'package:byte_papo/features/chat/presentation/chat_controller.dart';
@@ -71,6 +72,73 @@ void main() {
     expect(toolCalls!.single.name, 'weather');
     expect(toolCalls.single.arguments, '{"city":"Sao Paulo"}');
   });
+
+  test('send recomposes system prompt with the selected character', () async {
+    final database = AppDatabase(NativeDatabase.memory());
+    addTearDown(database.close);
+    await _seedServer(database);
+    final gateway = _RecordingChatGateway();
+    final repository = DriftConversationRepository(database: database);
+    await _seedCharacter(database, id: 'ada', name: 'Ada');
+    await _seedCharacter(database, id: 'grace', name: 'Grace');
+    final controller = ChatController(
+      chatGateway: gateway,
+      conversationRepository: repository,
+      server: ServerProfile.create(
+        id: 'server-1',
+        name: 'Local',
+        input: 'http://127.0.0.1:11434',
+      ),
+      model: 'qwen3:latest',
+    );
+
+    await controller.send(
+      'Oi',
+      character: ChatCharacter.create(
+        id: 'ada',
+        name: 'Ada',
+        instructions: 'Responda como Ada.',
+      ),
+      globalInstructions: 'Sempre responda em pt-BR.',
+    );
+    await Future<void>.delayed(Duration.zero);
+    await controller.send(
+      'Agora Grace',
+      character: ChatCharacter.create(
+        id: 'grace',
+        name: 'Grace',
+        instructions: 'Responda como Grace.',
+      ),
+      globalInstructions: 'Use frases curtas.',
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(
+      gateway.requests.first.first.content,
+      '[Politicas globais]\n'
+      'Sempre responda em pt-BR.\n\n'
+      '[Personagem]\n'
+      'Responda como Ada.',
+    );
+    expect(
+      gateway.requests.last.first.content,
+      '[Politicas globais]\n'
+      'Use frases curtas.\n\n'
+      '[Personagem]\n'
+      'Responda como Grace.',
+    );
+    expect(controller.conversation!.characterId, 'grace');
+    expect(controller.conversation!.characterNameSnapshot, 'Grace');
+    expect(
+      (await repository.listConversations()).single.systemPrompt,
+      gateway.requests.last.first.content,
+    );
+    final assistantMessages = controller.messages
+        .where((message) => message.role == ChatRole.assistant)
+        .toList();
+    expect(assistantMessages.first.characterNameSnapshot, 'Ada');
+    expect(assistantMessages.last.characterNameSnapshot, 'Grace');
+  });
 }
 
 class _ChatGateway implements ChatCompletionGateway {
@@ -89,6 +157,23 @@ class _ChatGateway implements ChatCompletionGateway {
   }) => Stream.fromIterable(chunks);
 }
 
+class _RecordingChatGateway implements ChatCompletionGateway {
+  final requests = <List<ChatMessage>>[];
+
+  @override
+  Stream<ChatChunk> streamChat({
+    required ServerProfile server,
+    required String model,
+    required List<ChatMessage> messages,
+    GenerationOptions options = const GenerationOptions(),
+  }) {
+    requests.add(messages);
+    return Stream.value(
+      const ChatChunk(kind: ChatChunkKind.content, text: 'Ok'),
+    );
+  }
+}
+
 Future<void> _seedServer(AppDatabase database) {
   final now = DateTime.utc(2026);
   return database
@@ -101,6 +186,25 @@ Future<void> _seedServer(AppDatabase database) {
           protocol: 'http',
           host: '127.0.0.1',
           port: 11434,
+          createdAt: now,
+          updatedAt: now,
+        ),
+      );
+}
+
+Future<void> _seedCharacter(
+  AppDatabase database, {
+  required String id,
+  required String name,
+}) {
+  final now = DateTime.utc(2026);
+  return database
+      .into(database.chatCharacters)
+      .insert(
+        ChatCharactersCompanion.insert(
+          id: id,
+          name: name,
+          instructions: 'Instrucoes',
           createdAt: now,
           updatedAt: now,
         ),

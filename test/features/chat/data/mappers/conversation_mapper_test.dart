@@ -15,6 +15,9 @@ void main() {
       toolCallsJson:
           '[{"id":"call-1","type":"function","function":{"name":"weather","arguments":"{\\"city\\":\\"Sao Paulo\\"}"}}]',
       toolCallId: null,
+      characterIdSnapshot: 'ada',
+      characterNameSnapshot: 'Ada',
+      characterAvatarPathSnapshot: '/tmp/ada.png',
       createdAt: DateTime.utc(2026, 7, 13),
       updatedAt: DateTime.utc(2026, 7, 13, 1),
     );
@@ -22,6 +25,9 @@ void main() {
     final message = ConversationMapper.messageFromRow(row);
 
     expect(message.id, 'message-1');
+    expect(message.characterIdSnapshot, 'ada');
+    expect(message.characterNameSnapshot, 'Ada');
+    expect(message.characterAvatarPathSnapshot, '/tmp/ada.png');
     expect(message.toolCalls, hasLength(1));
     expect(message.toolCalls!.single.name, 'weather');
     expect(

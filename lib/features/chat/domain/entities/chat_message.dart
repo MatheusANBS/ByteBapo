@@ -40,6 +40,9 @@ class ChatMessage {
     this.status = ChatMessageStatus.completed,
     this.toolCalls,
     this.toolCallId,
+    this.characterIdSnapshot,
+    this.characterNameSnapshot,
+    this.characterAvatarPathSnapshot,
   });
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
@@ -61,6 +64,10 @@ class ChatMessage {
                 .toList(growable: false)
           : const [],
       toolCallId: json['toolCallId'] as String?,
+      characterIdSnapshot: json['characterIdSnapshot'] as String?,
+      characterNameSnapshot: json['characterNameSnapshot'] as String?,
+      characterAvatarPathSnapshot:
+          json['characterAvatarPathSnapshot'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: DateTime.parse(json['updatedAt'] as String),
     );
@@ -77,6 +84,9 @@ class ChatMessage {
   final DateTime updatedAt;
   final List<ToolCall>? toolCalls;
   final String? toolCallId;
+  final String? characterIdSnapshot;
+  final String? characterNameSnapshot;
+  final String? characterAvatarPathSnapshot;
 
   bool get isStreaming => status == ChatMessageStatus.streaming;
 
@@ -91,6 +101,9 @@ class ChatMessage {
       'status': status.name,
       'toolCalls': toolCalls?.map((t) => t.toJson()).toList(),
       'toolCallId': toolCallId,
+      'characterIdSnapshot': characterIdSnapshot,
+      'characterNameSnapshot': characterNameSnapshot,
+      'characterAvatarPathSnapshot': characterAvatarPathSnapshot,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
     };
